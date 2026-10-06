@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getPublishedArticleBySlug } from "@/lib/articles/queries";
 import { getArticleCoverUrl } from "@/lib/articles/cover";
 import { ARTICLE_CONTENT_TYPE_LABELS } from "@/lib/articles/types";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, absoluteUrl, SITE_NAME } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +39,19 @@ export default async function ArticleDetailPage({
     article.content_type;
   const paragraphs = article.body.split(/\n{2,}/).filter((p) => p.trim().length > 0);
 
+  // Minimal, factual Article structured data — title/description/dates and
+  // the site's own attribution only, no invented credentials.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.short_description,
+    datePublished: article.created_at,
+    dateModified: article.updated_at,
+    author: { "@type": "Person", name: SITE_NAME },
+    mainEntityOfPage: absoluteUrl(`/knowledge/${article.slug}`),
+  };
+
   return (
     <article className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
       <Link href="/knowledge" className="text-sm font-medium text-gold underline-offset-4 hover:underline">
@@ -68,6 +81,8 @@ export default async function ArticleDetailPage({
           <p key={i}>{p}</p>
         ))}
       </div>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </article>
   );
 }
