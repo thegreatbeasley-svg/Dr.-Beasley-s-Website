@@ -6,6 +6,8 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { getDb } from "@/lib/db";
 import { RESOURCE_FILES_DIR } from "@/lib/paths";
 import { createResource, slugify } from "@/lib/resources/queries";
+import { createArticle } from "@/lib/articles/queries";
+import type { ArticleContentType } from "@/lib/articles/types";
 
 /**
  * Generates a short, clearly-labeled placeholder PDF entirely in-process
@@ -125,34 +127,90 @@ const SEED_RESOURCES: SeedResource[] = [
   },
 ];
 
+type SeedArticle = {
+  title: string;
+  contentType: ArticleContentType;
+  topic: string;
+  shortDescription: string;
+  body: string;
+  published: boolean;
+  featured: boolean;
+};
+
+const SEED_ARTICLES: SeedArticle[] = [
+  {
+    title: "Sample Knowledge Hub Article",
+    contentType: "article",
+    topic: "Getting started",
+    shortDescription:
+      "A short demonstration article showing how on-page Knowledge Hub content looks and reads.",
+    body: "This is placeholder demonstration content used to show how an on-page article renders in the Knowledge Hub, separate from the downloadable PDF resources.\n\nReal articles, once approved, would replace this placeholder text. No career, qualifications, or biographical claims should be inferred from this demo paragraph.\n\nA real article could run to several paragraphs like this one, with the Knowledge Hub listing it alongside guides, worksheets, and books.",
+    published: true,
+    featured: true,
+  },
+  {
+    title: "Sample Guide: How This Demo Works",
+    contentType: "guide",
+    topic: "About this demo",
+    shortDescription: "A short walkthrough of what's real and what's a placeholder in this build.",
+    body: "This guide exists only to demonstrate the 'guide' content type inside the Knowledge Hub.\n\nEverything you see under Knowledge Hub, Questions, Books, and Projects on this build is either a working feature with no content yet, or placeholder demonstration content clearly labeled as such.",
+    published: true,
+    featured: false,
+  },
+];
+
+// Each content type is seeded independently and only when its own table is
+// still empty — this is what lets a later stage add new seed content
+// (articles, books, projects) without ever touching already-seeded or
+// admin-created resources.
 export async function seedDatabaseIfEmpty() {
   const db = getDb();
-  const { count } = db.prepare(`SELECT COUNT(*) as count FROM resources`).get() as {
-    count: number;
-  };
-  if (count > 0) return;
 
-  for (const seed of SEED_RESOURCES) {
-    const pdfBytes = await buildSamplePdf(seed.title, seed.bodyLines);
-    const fileName = `${crypto.randomUUID()}.pdf`;
-    await fs.writeFile(path.join(RESOURCE_FILES_DIR, fileName), pdfBytes);
+  const resourceCount = (
+    db.prepare(`SELECT COUNT(*) as count FROM resources`).get() as { count: number }
+  ).count;
+  if (resourceCount === 0) {
+    for (const seed of SEED_RESOURCES) {
+      const pdfBytes = await buildSamplePdf(seed.title, seed.bodyLines);
+      const fileName = `${crypto.randomUUID()}.pdf`;
+      await fs.writeFile(path.join(RESOURCE_FILES_DIR, fileName), pdfBytes);
 
-    createResource({
-      title: seed.title,
-      slug: slugify(seed.title),
-      short_description: seed.shortDescription,
-      long_description: seed.longDescription,
-      resource_type: seed.resourceType,
-      file_path: fileName,
-      file_name: `${slugify(seed.title)}.pdf`,
-      file_size: pdfBytes.byteLength,
-      cover_image_path: null,
-      is_demo_content: true,
-      published: seed.published,
-      featured: seed.featured,
-    });
+      createResource({
+        title: seed.title,
+        slug: slugify(seed.title),
+        short_description: seed.shortDescription,
+        long_description: seed.longDescription,
+        resource_type: seed.resourceType,
+        file_path: fileName,
+        file_name: `${slugify(seed.title)}.pdf`,
+        file_size: pdfBytes.byteLength,
+        cover_image_path: null,
+        is_demo_content: true,
+        published: seed.published,
+        featured: seed.featured,
+      });
+    }
+    console.log(`[seed] Created ${SEED_RESOURCES.length} sample resources.`);
   }
 
-   
-  console.log(`[seed] Created ${SEED_RESOURCES.length} sample resources.`);
+  const articleCount = (
+    db.prepare(`SELECT COUNT(*) as count FROM articles`).get() as { count: number }
+  ).count;
+  if (articleCount === 0) {
+    for (const seed of SEED_ARTICLES) {
+      createArticle({
+        title: seed.title,
+        slug: slugify(seed.title),
+        short_description: seed.shortDescription,
+        body: seed.body,
+        topic: seed.topic,
+        content_type: seed.contentType,
+        cover_image_path: null,
+        is_demo_content: true,
+        published: seed.published,
+        featured: seed.featured,
+      });
+    }
+    console.log(`[seed] Created ${SEED_ARTICLES.length} sample articles.`);
+  }
 }

@@ -72,15 +72,10 @@ export function isSlugTaken(slug: string, excludeId?: string): boolean {
   return Boolean(row);
 }
 
-export function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+// Re-exported for backward compatibility with existing importers
+// (app/api/admin/resources/*) — the implementation now lives in
+// lib/slug.ts so every content domain shares it.
+export { slugify } from "@/lib/slug";
 
 export type ResourceInput = {
   title: string;
