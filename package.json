@@ -6,7 +6,10 @@
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start -H 127.0.0.1",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:supabase:dry-run": "tsx scripts/migrate-to-supabase.ts --dry-run",
+    "migrate:supabase": "tsx scripts/migrate-to-supabase.ts",
+    "migrate:supabase:verify": "tsx scripts/migrate-to-supabase.ts --verify"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -27,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
