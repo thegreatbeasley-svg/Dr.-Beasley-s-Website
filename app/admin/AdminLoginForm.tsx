@@ -3,9 +3,13 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 
-export default function AdminLoginForm() {
+type Props = {
+  backend: "sqlite" | "supabase";
+};
+
+export default function AdminLoginForm({ backend }: Props) {
   const router = useRouter();
-  const [username, setUsername] = React.useState("");
+  const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -20,11 +24,15 @@ export default function AdminLoginForm() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(
+          backend === "supabase"
+            ? { email: identifier, password }
+            : { username: identifier, password }
+        ),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Incorrect username or password.");
+        setError(data.error || "Incorrect sign-in details.");
         setLoading(false);
         return;
       }
@@ -39,16 +47,16 @@ export default function AdminLoginForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
       <div>
-        <label htmlFor="username" className="mb-2 block text-sm text-paper-muted">
-          Username
+        <label htmlFor="identifier" className="mb-2 block text-sm text-paper-muted">
+          {backend === "supabase" ? "Email" : "Username"}
         </label>
         <input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          id="identifier"
+          type={backend === "supabase" ? "email" : "text"}
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           className="w-full rounded-lg border border-white/15 bg-ink px-4 py-3 text-paper focus:border-gold focus:outline-none"
-          autoComplete="username"
+          autoComplete={backend === "supabase" ? "email" : "username"}
           autoFocus
         />
       </div>

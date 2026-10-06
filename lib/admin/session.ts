@@ -3,16 +3,25 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseSessionClient } from "@/lib/supabase/server-auth";
 
 /**
- * Demo-grade admin auth: a single allow-listed username/password from env
- * vars, backed by an opaque server-side session token stored in SQLite and
- * handed to the browser as an httpOnly cookie.
+ * Two admin auth modes, selected by isSupabaseConfigured():
  *
- * This intentionally has NO real user system, password hashing at rest, or
- * account recovery — see README.md "Production work remaining" for what a
- * real deployment needs instead (proper hashed credentials or a hosted
- * auth provider, HTTPS-only cookies, rate limiting, etc).
+ * - SQLite (default/demo): a single allow-listed username/password from env
+ *   vars, backed by an opaque server-side session token stored in SQLite and
+ *   handed to the browser as an httpOnly cookie. No real user system,
+ *   password hashing at rest, or account recovery — demo-grade by design.
+ *
+ * - Supabase: real Supabase Auth (email/password), session held in
+ *   httpOnly cookies managed by @supabase/ssr (see lib/supabase/
+ *   server-auth.ts + proxy.ts for the refresh side). Access is further
+ *   restricted to a single allow-listed ADMIN_EMAIL — a valid Supabase
+ *   account alone is not enough.
+ *
+ * Every exported function keeps the same signature regardless of mode, so
+ * no call site (admin pages, API routes) needs to know which is active.
  */
 
 const COOKIE_NAME = "beasly_admin_session";
@@ -30,6 +39,7 @@ function timingSafeStringEqual(a: string, b: string) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+/** SQLite-mode login only — Supabase mode authenticates via signInWithPassword instead. */
 export function verifyAdminCredentials(username: string, password: string): boolean {
   const expectedUsername = process.env.ADMIN_USERNAME ?? "";
   const expectedPassword = process.env.ADMIN_PASSWORD ?? "";
@@ -40,10 +50,26 @@ export function verifyAdminCredentials(username: string, password: string): bool
   );
 }
 
+/**
+ * Supabase-mode allowlist: a valid Supabase Auth session is necessary but
+ * not sufficient — the signed-in email must also match ADMIN_EMAIL
+ * (comma-separated for more than one address), checked case-insensitively.
+ */
+export function isAdminEmailAllowed(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const allowlist = (process.env.ADMIN_EMAIL ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (allowlist.length === 0) return false;
+  return allowlist.includes(email.toLowerCase());
+}
+
 function pruneExpiredSessions() {
   getDb().prepare(`DELETE FROM admin_sessions WHERE expires_at < ?`).run(new Date().toISOString());
 }
 
+/** SQLite-mode only — call after verifyAdminCredentials() succeeds. */
 export async function createAdminSession(): Promise<string> {
   const token = crypto.randomBytes(32).toString("hex");
   const now = new Date();
@@ -67,6 +93,11 @@ export async function createAdminSession(): Promise<string> {
 }
 
 export async function destroyAdminSession() {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseSessionClient();
+    await supabase.auth.signOut();
+    return;
+  }
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (token) {
@@ -75,8 +106,16 @@ export async function destroyAdminSession() {
   cookieStore.delete(COOKIE_NAME);
 }
 
-/** True server-side check: looks the cookie's token up in SQLite every time. */
+/** True server-side check, re-verified on every call — never trusts the client. */
 export async function isAdminAuthenticated(): Promise<boolean> {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseSessionClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return isAdminEmailAllowed(user?.email);
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return false;
