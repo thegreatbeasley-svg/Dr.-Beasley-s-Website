@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const book = getPublishedBookBySlug(slug);
+  const book = await getPublishedBookBySlug(slug);
   if (!book) {
     return buildMetadata({ title: "Not found", description: "", path: `/books/${slug}`, index: false });
   }
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const book = getPublishedBookBySlug(slug);
+  const book = await getPublishedBookBySlug(slug);
   if (!book) notFound();
 
   return (

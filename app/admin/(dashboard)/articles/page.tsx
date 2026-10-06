@@ -5,8 +5,8 @@ import AdminPublishTable from "@/app/components/admin/AdminPublishTable";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminArticlesPage() {
-  const articles = listAllArticlesAdmin();
+export default async function AdminArticlesPage() {
+  const articles = await listAllArticlesAdmin();
   const items = articles.map((a) => ({
     id: a.id,
     title: a.title,

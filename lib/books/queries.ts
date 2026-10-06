@@ -2,6 +2,8 @@ import "server-only";
 import crypto from "node:crypto";
 import { getDb } from "@/lib/db";
 import { deleteCoverImage } from "@/lib/resources/storage";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseAdminClient, unwrap, unwrapNullable } from "@/lib/supabase/admin";
 import { toBook, type Book, type BookRow } from "./types";
 
 function nowIso() {
@@ -12,14 +14,36 @@ function nowIso() {
 // PUBLIC
 // ============================================================
 
-export function listPublishedBooks(): Book[] {
+export async function listPublishedBooks(): Promise<Book[]> {
+  if (isSupabaseConfigured()) {
+    const rows = unwrap(
+      await createSupabaseAdminClient()
+        .from("books")
+        .select("*")
+        .eq("published", true)
+        .order("featured", { ascending: false })
+        .order("created_at", { ascending: false })
+    ) as BookRow[];
+    return rows.map(toBook);
+  }
   const rows = getDb()
     .prepare(`SELECT * FROM books WHERE published = 1 ORDER BY featured DESC, created_at DESC`)
     .all() as BookRow[];
   return rows.map(toBook);
 }
 
-export function getPublishedBookBySlug(slug: string): Book | null {
+export async function getPublishedBookBySlug(slug: string): Promise<Book | null> {
+  if (isSupabaseConfigured()) {
+    const row = unwrapNullable(
+      await createSupabaseAdminClient()
+        .from("books")
+        .select("*")
+        .eq("slug", slug)
+        .eq("published", true)
+        .maybeSingle()
+    ) as BookRow | null;
+    return row ? toBook(row) : null;
+  }
   const row = getDb().prepare(`SELECT * FROM books WHERE slug = ? AND published = 1`).get(slug) as
     | BookRow
     | undefined;
@@ -30,17 +54,35 @@ export function getPublishedBookBySlug(slug: string): Book | null {
 // ADMIN
 // ============================================================
 
-export function listAllBooksAdmin(): Book[] {
+export async function listAllBooksAdmin(): Promise<Book[]> {
+  if (isSupabaseConfigured()) {
+    const rows = unwrap(
+      await createSupabaseAdminClient().from("books").select("*").order("created_at", { ascending: false })
+    ) as BookRow[];
+    return rows.map(toBook);
+  }
   const rows = getDb().prepare(`SELECT * FROM books ORDER BY created_at DESC`).all() as BookRow[];
   return rows.map(toBook);
 }
 
-export function getBookById(id: string): Book | null {
+export async function getBookById(id: string): Promise<Book | null> {
+  if (isSupabaseConfigured()) {
+    const row = unwrapNullable(
+      await createSupabaseAdminClient().from("books").select("*").eq("id", id).maybeSingle()
+    ) as BookRow | null;
+    return row ? toBook(row) : null;
+  }
   const row = getDb().prepare(`SELECT * FROM books WHERE id = ?`).get(id) as BookRow | undefined;
   return row ? toBook(row) : null;
 }
 
-export function isBookSlugTaken(slug: string, excludeId?: string): boolean {
+export async function isBookSlugTaken(slug: string, excludeId?: string): Promise<boolean> {
+  if (isSupabaseConfigured()) {
+    let query = createSupabaseAdminClient().from("books").select("id").eq("slug", slug);
+    if (excludeId) query = query.neq("id", excludeId);
+    const row = unwrapNullable(await query.maybeSingle());
+    return Boolean(row);
+  }
   const db = getDb();
   const row = excludeId
     ? db.prepare(`SELECT id FROM books WHERE slug = ? AND id != ?`).get(slug, excludeId)
@@ -61,9 +103,34 @@ export type BookInput = {
   featured?: boolean;
 };
 
-export function createBook(input: BookInput): Book {
+export async function createBook(input: BookInput): Promise<Book> {
   const id = crypto.randomUUID();
   const timestamp = nowIso();
+
+  if (isSupabaseConfigured()) {
+    unwrap(
+      await createSupabaseAdminClient()
+        .from("books")
+        .insert({
+          id,
+          title: input.title,
+          slug: input.slug,
+          kind: input.kind,
+          description: input.description,
+          status: input.status,
+          cta_label: input.cta_label ?? null,
+          cta_url: input.cta_url ?? null,
+          cover_image_path: input.cover_image_path ?? null,
+          published: Boolean(input.published),
+          featured: Boolean(input.featured),
+          created_at: timestamp,
+          updated_at: timestamp,
+        })
+        .select()
+    );
+    return (await getBookById(id))!;
+  }
+
   getDb()
     .prepare(
       `INSERT INTO books
@@ -87,13 +154,13 @@ export function createBook(input: BookInput): Book {
       created_at: timestamp,
       updated_at: timestamp,
     });
-  return getBookById(id)!;
+  return (await getBookById(id))!;
 }
 
 export type BookUpdateInput = Partial<BookInput>;
 
-export function updateBook(id: string, input: BookUpdateInput): Book {
-  const existing = getBookById(id);
+export async function updateBook(id: string, input: BookUpdateInput): Promise<Book> {
+  const existing = await getBookById(id);
   if (!existing) throw new Error("Book not found");
 
   const merged = {
@@ -106,10 +173,15 @@ export function updateBook(id: string, input: BookUpdateInput): Book {
     cta_url: input.cta_url !== undefined ? input.cta_url : existing.cta_url,
     cover_image_path:
       input.cover_image_path !== undefined ? input.cover_image_path : existing.cover_image_path,
-    published: input.published !== undefined ? (input.published ? 1 : 0) : existing.published ? 1 : 0,
-    featured: input.featured !== undefined ? (input.featured ? 1 : 0) : existing.featured ? 1 : 0,
+    published: input.published !== undefined ? input.published : existing.published,
+    featured: input.featured !== undefined ? input.featured : existing.featured,
     updated_at: nowIso(),
   };
+
+  if (isSupabaseConfigured()) {
+    unwrap(await createSupabaseAdminClient().from("books").update(merged).eq("id", id).select());
+    return (await getBookById(id))!;
+  }
 
   getDb()
     .prepare(
@@ -119,14 +191,19 @@ export function updateBook(id: string, input: BookUpdateInput): Book {
         published = @published, featured = @featured, updated_at = @updated_at
        WHERE id = @id`
     )
-    .run({ ...merged, id });
+    .run({
+      ...merged,
+      published: merged.published ? 1 : 0,
+      featured: merged.featured ? 1 : 0,
+      id,
+    });
 
-  return getBookById(id)!;
+  return (await getBookById(id))!;
 }
 
 export async function replaceBookCoverImage(bookId: string, coverPath: string) {
-  const existing = getBookById(bookId);
+  const existing = await getBookById(bookId);
   if (!existing) throw new Error("Book not found");
-  updateBook(bookId, { cover_image_path: coverPath });
+  await updateBook(bookId, { cover_image_path: coverPath });
   await deleteCoverImage(existing.cover_image_path);
 }

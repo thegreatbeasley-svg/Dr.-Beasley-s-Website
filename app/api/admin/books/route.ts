@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isBookSlugTaken(slug)) {
+  if (await isBookSlugTaken(slug)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const book = createBook({
+  const book = await createBook({
     title,
     slug,
     kind,

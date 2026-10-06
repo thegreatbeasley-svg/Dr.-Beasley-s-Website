@@ -11,7 +11,7 @@ export async function PATCH(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getProjectById(id);
+  const existing = await getProjectById(id);
   if (!existing) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
   let body: Record<string, unknown>;
@@ -25,7 +25,7 @@ export async function PATCH(req: Request, { params }: Context) {
   if (typeof body.published === "boolean") patch.published = body.published;
   if (typeof body.featured === "boolean") patch.featured = body.featured;
 
-  const project = updateProject(id, patch);
+  const project = await updateProject(id, patch);
   return NextResponse.json({ success: true, project });
 }
 
@@ -34,7 +34,7 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getProjectById(id);
+  const existing = await getProjectById(id);
   if (!existing) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
   const formData = await req.formData();
@@ -56,14 +56,14 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isProjectSlugTaken(slug, id)) {
+  if (await isProjectSlugTaken(slug, id)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
     );
   }
 
-  const project = updateProject(id, {
+  const project = await updateProject(id, {
     name,
     slug,
     relationship_note: relationshipNote || undefined,

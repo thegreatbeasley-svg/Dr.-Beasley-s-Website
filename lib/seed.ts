@@ -177,7 +177,7 @@ export async function seedDatabaseIfEmpty() {
       const fileName = `${crypto.randomUUID()}.pdf`;
       await fs.writeFile(path.join(RESOURCE_FILES_DIR, fileName), pdfBytes);
 
-      createResource({
+      await createResource({
         title: seed.title,
         slug: slugify(seed.title),
         short_description: seed.shortDescription,
@@ -200,7 +200,7 @@ export async function seedDatabaseIfEmpty() {
   ).count;
   if (articleCount === 0) {
     for (const seed of SEED_ARTICLES) {
-      createArticle({
+      await createArticle({
         title: seed.title,
         slug: slugify(seed.title),
         short_description: seed.shortDescription,
@@ -229,7 +229,7 @@ export async function seedDatabaseIfEmpty() {
       { name: "Continuum Lifestyle", description: null },
     ];
     for (const seed of seedProjects) {
-      createProject({
+      await createProject({
         name: seed.name,
         slug: slugify(seed.name),
         relationship_note: DEFAULT_RELATIONSHIP_NOTE,

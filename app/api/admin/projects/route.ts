@@ -29,14 +29,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isProjectSlugTaken(slug)) {
+  if (await isProjectSlugTaken(slug)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
     );
   }
 
-  const project = createProject({
+  const project = await createProject({
     name,
     slug,
     relationship_note: relationshipNote || undefined,

@@ -11,8 +11,8 @@ export const metadata = buildMetadata({
   path: "/books",
 });
 
-export default function BooksPage() {
-  const books = listPublishedBooks();
+export default async function BooksPage() {
+  const books = await listPublishedBooks();
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">

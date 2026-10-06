@@ -18,7 +18,7 @@ export async function PATCH(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getBookById(id);
+  const existing = await getBookById(id);
   if (!existing) return NextResponse.json({ error: "Book not found" }, { status: 404 });
 
   let body: Record<string, unknown>;
@@ -32,7 +32,7 @@ export async function PATCH(req: Request, { params }: Context) {
   if (typeof body.published === "boolean") patch.published = body.published;
   if (typeof body.featured === "boolean") patch.featured = body.featured;
 
-  const book = updateBook(id, patch);
+  const book = await updateBook(id, patch);
   return NextResponse.json({ success: true, book });
 }
 
@@ -41,7 +41,7 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getBookById(id);
+  const existing = await getBookById(id);
   if (!existing) return NextResponse.json({ error: "Book not found" }, { status: 404 });
 
   const formData = await req.formData();
@@ -69,14 +69,14 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isBookSlugTaken(slug, id)) {
+  if (await isBookSlugTaken(slug, id)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
     );
   }
 
-  updateBook(id, {
+  await updateBook(id, {
     title,
     slug,
     kind,
@@ -98,5 +98,5 @@ export async function PUT(req: Request, { params }: Context) {
     }
   }
 
-  return NextResponse.json({ success: true, book: getBookById(id) });
+  return NextResponse.json({ success: true, book: await getBookById(id) });
 }

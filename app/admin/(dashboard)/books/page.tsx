@@ -5,8 +5,8 @@ import AdminPublishTable from "@/app/components/admin/AdminPublishTable";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminBooksPage() {
-  const books = listAllBooksAdmin();
+export default async function AdminBooksPage() {
+  const books = await listAllBooksAdmin();
   const items = books.map((b) => ({
     id: b.id,
     title: b.title,

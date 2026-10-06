@@ -19,7 +19,7 @@ export async function PATCH(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getArticleById(id);
+  const existing = await getArticleById(id);
   if (!existing) {
     return NextResponse.json({ error: "Article not found" }, { status: 404 });
   }
@@ -35,7 +35,7 @@ export async function PATCH(req: Request, { params }: Context) {
   if (typeof body.published === "boolean") patch.published = body.published;
   if (typeof body.featured === "boolean") patch.featured = body.featured;
 
-  const article = updateArticle(id, patch);
+  const article = await updateArticle(id, patch);
   return NextResponse.json({ success: true, article });
 }
 
@@ -45,7 +45,7 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getArticleById(id);
+  const existing = await getArticleById(id);
   if (!existing) {
     return NextResponse.json({ error: "Article not found" }, { status: 404 });
   }
@@ -76,14 +76,14 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isArticleSlugTaken(slug, id)) {
+  if (await isArticleSlugTaken(slug, id)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
     );
   }
 
-  updateArticle(id, {
+  await updateArticle(id, {
     title,
     slug,
     short_description: shortDescription,
@@ -104,5 +104,5 @@ export async function PUT(req: Request, { params }: Context) {
     }
   }
 
-  return NextResponse.json({ success: true, article: getArticleById(id) });
+  return NextResponse.json({ success: true, article: await getArticleById(id) });
 }

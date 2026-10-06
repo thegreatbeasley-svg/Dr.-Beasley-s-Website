@@ -2,6 +2,8 @@ import "server-only";
 import crypto from "node:crypto";
 import { getDb } from "@/lib/db";
 import { deleteCoverImage } from "@/lib/resources/storage";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseAdminClient, unwrap, unwrapNullable } from "@/lib/supabase/admin";
 import { toArticle, type Article, type ArticleRow, type ArticleContentType } from "./types";
 
 function nowIso() {
@@ -12,14 +14,36 @@ function nowIso() {
 // PUBLIC reads
 // ============================================================
 
-export function listPublishedArticles(): Article[] {
+export async function listPublishedArticles(): Promise<Article[]> {
+  if (isSupabaseConfigured()) {
+    const rows = unwrap(
+      await createSupabaseAdminClient()
+        .from("articles")
+        .select("*")
+        .eq("published", true)
+        .order("featured", { ascending: false })
+        .order("created_at", { ascending: false })
+    ) as ArticleRow[];
+    return rows.map(toArticle);
+  }
   const rows = getDb()
     .prepare(`SELECT * FROM articles WHERE published = 1 ORDER BY featured DESC, created_at DESC`)
     .all() as ArticleRow[];
   return rows.map(toArticle);
 }
 
-export function getPublishedArticleBySlug(slug: string): Article | null {
+export async function getPublishedArticleBySlug(slug: string): Promise<Article | null> {
+  if (isSupabaseConfigured()) {
+    const row = unwrapNullable(
+      await createSupabaseAdminClient()
+        .from("articles")
+        .select("*")
+        .eq("slug", slug)
+        .eq("published", true)
+        .maybeSingle()
+    ) as ArticleRow | null;
+    return row ? toArticle(row) : null;
+  }
   const row = getDb()
     .prepare(`SELECT * FROM articles WHERE slug = ? AND published = 1`)
     .get(slug) as ArticleRow | undefined;
@@ -30,21 +54,39 @@ export function getPublishedArticleBySlug(slug: string): Article | null {
 // ADMIN
 // ============================================================
 
-export function listAllArticlesAdmin(): Article[] {
+export async function listAllArticlesAdmin(): Promise<Article[]> {
+  if (isSupabaseConfigured()) {
+    const rows = unwrap(
+      await createSupabaseAdminClient().from("articles").select("*").order("created_at", { ascending: false })
+    ) as ArticleRow[];
+    return rows.map(toArticle);
+  }
   const rows = getDb()
     .prepare(`SELECT * FROM articles ORDER BY created_at DESC`)
     .all() as ArticleRow[];
   return rows.map(toArticle);
 }
 
-export function getArticleById(id: string): Article | null {
+export async function getArticleById(id: string): Promise<Article | null> {
+  if (isSupabaseConfigured()) {
+    const row = unwrapNullable(
+      await createSupabaseAdminClient().from("articles").select("*").eq("id", id).maybeSingle()
+    ) as ArticleRow | null;
+    return row ? toArticle(row) : null;
+  }
   const row = getDb().prepare(`SELECT * FROM articles WHERE id = ?`).get(id) as
     | ArticleRow
     | undefined;
   return row ? toArticle(row) : null;
 }
 
-export function isArticleSlugTaken(slug: string, excludeId?: string): boolean {
+export async function isArticleSlugTaken(slug: string, excludeId?: string): Promise<boolean> {
+  if (isSupabaseConfigured()) {
+    let query = createSupabaseAdminClient().from("articles").select("id").eq("slug", slug);
+    if (excludeId) query = query.neq("id", excludeId);
+    const row = unwrapNullable(await query.maybeSingle());
+    return Boolean(row);
+  }
   const db = getDb();
   const row = excludeId
     ? db.prepare(`SELECT id FROM articles WHERE slug = ? AND id != ?`).get(slug, excludeId)
@@ -65,9 +107,34 @@ export type ArticleInput = {
   featured?: boolean;
 };
 
-export function createArticle(input: ArticleInput): Article {
+export async function createArticle(input: ArticleInput): Promise<Article> {
   const id = crypto.randomUUID();
   const timestamp = nowIso();
+
+  if (isSupabaseConfigured()) {
+    unwrap(
+      await createSupabaseAdminClient()
+        .from("articles")
+        .insert({
+          id,
+          title: input.title,
+          slug: input.slug,
+          short_description: input.short_description,
+          body: input.body,
+          topic: input.topic ?? null,
+          content_type: input.content_type,
+          cover_image_path: input.cover_image_path ?? null,
+          is_demo_content: input.is_demo_content !== false,
+          published: Boolean(input.published),
+          featured: Boolean(input.featured),
+          created_at: timestamp,
+          updated_at: timestamp,
+        })
+        .select()
+    );
+    return (await getArticleById(id))!;
+  }
+
   getDb()
     .prepare(
       `INSERT INTO articles
@@ -91,13 +158,13 @@ export function createArticle(input: ArticleInput): Article {
       created_at: timestamp,
       updated_at: timestamp,
     });
-  return getArticleById(id)!;
+  return (await getArticleById(id))!;
 }
 
 export type ArticleUpdateInput = Partial<ArticleInput>;
 
-export function updateArticle(id: string, input: ArticleUpdateInput): Article {
-  const existing = getArticleById(id);
+export async function updateArticle(id: string, input: ArticleUpdateInput): Promise<Article> {
+  const existing = await getArticleById(id);
   if (!existing) throw new Error("Article not found");
 
   const merged = {
@@ -109,12 +176,16 @@ export function updateArticle(id: string, input: ArticleUpdateInput): Article {
     content_type: input.content_type ?? existing.content_type,
     cover_image_path:
       input.cover_image_path !== undefined ? input.cover_image_path : existing.cover_image_path,
-    is_demo_content:
-      input.is_demo_content !== undefined ? (input.is_demo_content ? 1 : 0) : existing.is_demo_content ? 1 : 0,
-    published: input.published !== undefined ? (input.published ? 1 : 0) : existing.published ? 1 : 0,
-    featured: input.featured !== undefined ? (input.featured ? 1 : 0) : existing.featured ? 1 : 0,
+    is_demo_content: input.is_demo_content !== undefined ? input.is_demo_content : existing.is_demo_content,
+    published: input.published !== undefined ? input.published : existing.published,
+    featured: input.featured !== undefined ? input.featured : existing.featured,
     updated_at: nowIso(),
   };
+
+  if (isSupabaseConfigured()) {
+    unwrap(await createSupabaseAdminClient().from("articles").update(merged).eq("id", id).select());
+    return (await getArticleById(id))!;
+  }
 
   getDb()
     .prepare(
@@ -125,14 +196,20 @@ export function updateArticle(id: string, input: ArticleUpdateInput): Article {
         updated_at = @updated_at
        WHERE id = @id`
     )
-    .run({ ...merged, id });
+    .run({
+      ...merged,
+      is_demo_content: merged.is_demo_content ? 1 : 0,
+      published: merged.published ? 1 : 0,
+      featured: merged.featured ? 1 : 0,
+      id,
+    });
 
-  return getArticleById(id)!;
+  return (await getArticleById(id))!;
 }
 
 export async function replaceArticleCoverImage(articleId: string, coverPath: string) {
-  const existing = getArticleById(articleId);
+  const existing = await getArticleById(articleId);
   if (!existing) throw new Error("Article not found");
-  updateArticle(articleId, { cover_image_path: coverPath });
+  await updateArticle(articleId, { cover_image_path: coverPath });
   await deleteCoverImage(existing.cover_image_path);
 }

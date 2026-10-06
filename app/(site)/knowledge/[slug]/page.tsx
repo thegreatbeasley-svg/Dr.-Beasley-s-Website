@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = getPublishedArticleBySlug(slug);
+  const article = await getPublishedArticleBySlug(slug);
   if (!article) {
     return buildMetadata({
       title: "Not found",
@@ -31,7 +31,7 @@ export default async function ArticleDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = getPublishedArticleBySlug(slug);
+  const article = await getPublishedArticleBySlug(slug);
   if (!article) notFound();
 
   const label =

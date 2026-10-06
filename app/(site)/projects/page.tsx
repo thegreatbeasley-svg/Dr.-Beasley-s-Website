@@ -10,8 +10,8 @@ export const metadata = buildMetadata({
   path: "/projects",
 });
 
-export default function ProjectsPage() {
-  const projects = listPublishedProjects();
+export default async function ProjectsPage() {
+  const projects = await listPublishedProjects();
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-20 sm:py-24">
