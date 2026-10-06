@@ -167,3 +167,13 @@ begin
   );
 end;
 $$;
+
+-- This function writes leads/requests directly, bypassing the row-level
+-- security policies above — it must only ever be callable by the app's
+-- service-role client, never by an anonymous or merely-authenticated
+-- caller. Revoking first (idempotent even if nothing was ever granted)
+-- then granting only to service_role keeps this safe to rerun.
+revoke execute on function public.capture_lead_and_request(text, text, text, boolean, uuid)
+  from public, anon, authenticated;
+grant execute on function public.capture_lead_and_request(text, text, text, boolean, uuid)
+  to service_role;
