@@ -33,6 +33,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors }, { status: 400 });
   }
 
-  createEnquiry({ name, email, topic, message });
+  await createEnquiry({ name, email, topic, message });
   return NextResponse.json({ success: true });
 }

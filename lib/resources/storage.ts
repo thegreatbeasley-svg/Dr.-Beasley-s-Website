@@ -7,6 +7,8 @@ import {
   COVER_UPLOADS_DIR,
   COVER_PUBLIC_PREFIX,
 } from "@/lib/paths";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25MB
 const MAX_COVER_BYTES = 5 * 1024 * 1024; // 5MB
@@ -50,6 +52,13 @@ export async function saveResourceFile(file: File): Promise<{ fileName: string; 
   }
 
   const fileName = safeFileName(".pdf");
+  if (isSupabaseConfigured()) {
+    const { error } = await createSupabaseAdminClient().storage
+      .from("resource-files")
+      .upload(fileName, buffer, { contentType: "application/pdf", upsert: false });
+    if (error) throw new UploadError(`Could not store the PDF: ${error.message}`);
+    return { fileName, size: buffer.byteLength };
+  }
   await fs.writeFile(path.join(RESOURCE_FILES_DIR, fileName), buffer);
   return { fileName, size: buffer.byteLength };
 }
@@ -68,6 +77,15 @@ export async function saveCoverImage(file: File): Promise<{ path: string }> {
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const fileName = safeFileName(extension);
+  if (isSupabaseConfigured()) {
+    const supabase = createSupabaseAdminClient();
+    const { error } = await supabase.storage
+      .from("cover-images")
+      .upload(fileName, buffer, { contentType: file.type, upsert: false });
+    if (error) throw new UploadError(`Could not store the cover: ${error.message}`);
+    const { data } = supabase.storage.from("cover-images").getPublicUrl(fileName);
+    return { path: data.publicUrl };
+  }
   // COVER_UPLOADS_DIR is a fixed constant (public/uploads/covers) and
   // fileName is always our own server-generated UUID — this is not a
   // user-controlled path. The ignore comment stops Turbopack from
@@ -78,6 +96,10 @@ export async function saveCoverImage(file: File): Promise<{ path: string }> {
 }
 
 export async function deleteResourceFile(fileName: string) {
+  if (isSupabaseConfigured()) {
+    await createSupabaseAdminClient().storage.from("resource-files").remove([fileName]);
+    return;
+  }
   try {
     await fs.unlink(path.join(RESOURCE_FILES_DIR, fileName));
   } catch {
@@ -86,6 +108,16 @@ export async function deleteResourceFile(fileName: string) {
 }
 
 export async function deleteCoverImage(coverPath: string | null) {
+  if (isSupabaseConfigured()) {
+    if (!coverPath) return;
+    const marker = "/cover-images/";
+    const markerIndex = coverPath.indexOf(marker);
+    if (markerIndex === -1) return;
+    const objectPath = coverPath.slice(markerIndex + marker.length);
+    if (!objectPath || objectPath.includes("..")) return;
+    await createSupabaseAdminClient().storage.from("cover-images").remove([objectPath]);
+    return;
+  }
   if (!coverPath || !coverPath.startsWith(COVER_PUBLIC_PREFIX)) return;
   const fileName = coverPath.slice(COVER_PUBLIC_PREFIX.length + 1);
   // Guard against a stray ".." even though these paths are always

@@ -7,8 +7,8 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-export default function AdminEnquiriesPage() {
-  const enquiries = listEnquiriesAdmin();
+export default async function AdminEnquiriesPage() {
+  const enquiries = await listEnquiriesAdmin();
 
   return (
     <div>

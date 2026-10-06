@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const enquiries = listEnquiriesAdmin();
+  const enquiries = await listEnquiriesAdmin();
   const csv = toCsv(
     ["Name", "Email", "Topic", "Message", "Received"],
     enquiries.map((e) => [e.name, e.email, e.topic, e.message, e.created_at])
