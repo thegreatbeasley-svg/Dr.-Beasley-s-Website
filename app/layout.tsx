@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+// Fallback only — every public route under app/(site) sets its own
+// specific metadata via lib/seo.ts's buildMetadata(). This covers any
+// route that doesn't (e.g. /admin).
 export const metadata: Metadata = {
-  title: "Dr. Virgil Beasly — Resource Library (Local Demo)",
-  description:
-    "A local, working demo of Dr. Virgil Beasly's resource library: browse free guides and request a download.",
+  title: {
+    default: "Dr. Virgil Beasly (Local Demo)",
+    template: "%s",
+  },
+  description: "A local, working demo site for Dr. Virgil Beasly.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

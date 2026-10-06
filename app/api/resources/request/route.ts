@@ -24,6 +24,11 @@ export async function POST(req: Request) {
 
   const fieldErrors: Record<string, string> = {};
   if (!name) fieldErrors.name = "Name is required.";
+  // City is required for every *new* submission per product direction, but
+  // the `leads.city` column itself stays nullable — pre-existing rows saved
+  // before this requirement (if any) are never rejected or rewritten on
+  // read, only new inserts are held to it here.
+  if (!city) fieldErrors.city = "City is required.";
   if (!email) fieldErrors.email = "Email is required.";
   else if (!EMAIL_REGEX.test(email)) fieldErrors.email = "Enter a valid email address.";
   if (!resourceSlug) fieldErrors.resourceSlug = "Missing resource.";

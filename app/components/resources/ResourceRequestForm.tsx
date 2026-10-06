@@ -39,6 +39,7 @@ export default function ResourceRequestForm({ resourceSlug, resourceTitle, onSuc
 
     const errors: Record<string, string> = {};
     if (!name.trim()) errors.name = "Name is required.";
+    if (!city.trim()) errors.city = "City is required.";
     if (!email.trim()) errors.email = "Email is required.";
     else if (!EMAIL_REGEX.test(email.trim())) errors.email = "Enter a valid email address.";
     if (Object.keys(errors).length > 0) {
@@ -133,7 +134,7 @@ export default function ResourceRequestForm({ resourceSlug, resourceTitle, onSuc
 
       <div>
         <label htmlFor={cityId} className="mb-2 block text-sm text-paper-muted">
-          City <span className="text-paper-muted/60">(optional)</span>
+          City
         </label>
         <input
           id={cityId}
@@ -142,7 +143,14 @@ export default function ResourceRequestForm({ resourceSlug, resourceTitle, onSuc
           onChange={(e) => setCity(e.target.value)}
           className="w-full rounded-lg border border-white/15 bg-ink px-4 py-3 text-paper focus:border-gold focus:outline-none"
           autoComplete="address-level2"
+          aria-invalid={Boolean(fieldErrors.city)}
+          aria-describedby={fieldErrors.city ? `${cityId}-error` : undefined}
         />
+        {fieldErrors.city && (
+          <p id={`${cityId}-error`} className="mt-1 text-sm text-tangerine-hover">
+            {fieldErrors.city}
+          </p>
+        )}
       </div>
 
       <div>
