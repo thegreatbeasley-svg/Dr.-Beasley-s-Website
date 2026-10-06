@@ -1,6 +1,7 @@
 export function isSupabaseConfigured() {
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.DATA_BACKEND === "supabase" &&
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
       process.env.SUPABASE_SECRET_KEY
   );
