@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  --color-ink: #0b1628;
+  --color-ink-elevated: #142238;
+  --color-ink-border: rgba(244, 236, 224, 0.12);
+  --color-paper: #f4ecdf;
+  --color-paper-muted: #cdc3b2;
+  --color-gold: #c9a35a;
+  --color-gold-soft: rgba(201, 163, 90, 0.35);
+  --color-tangerine: #e2793a;
+  --color-tangerine-hover: #f08a4c;
+  --color-tangerine-ink: #2a1204;
+
+  /* Robust system font fallbacks — no remote font requests, so the demo
+     never depends on network access at build or run time. */
+  --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-ink-elevated: var(--color-ink-elevated);
+  --color-paper: var(--color-paper);
+  --color-paper-muted: var(--color-paper-muted);
+  --color-gold: var(--color-gold);
+  --color-tangerine: var(--color-tangerine);
+  --color-tangerine-hover: var(--color-tangerine-hover);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
