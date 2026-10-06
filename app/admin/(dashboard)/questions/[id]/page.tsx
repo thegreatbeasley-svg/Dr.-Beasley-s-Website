@@ -8,7 +8,7 @@ export default async function AdminQuestionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const question = getQuestionById(id);
+  const question = await getQuestionById(id);
   if (!question) notFound();
 
   return (

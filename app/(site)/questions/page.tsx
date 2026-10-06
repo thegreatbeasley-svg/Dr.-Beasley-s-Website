@@ -11,8 +11,8 @@ export const metadata = buildMetadata({
   path: "/questions",
 });
 
-export default function QuestionsPage() {
-  const questions = listPublishedQuestions();
+export default async function QuestionsPage() {
+  const questions = await listPublishedQuestions();
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-20 sm:py-24">

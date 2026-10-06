@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
   // Always lands in the moderation queue — see lib/questions/queries.ts.
   // Nothing here (or anywhere else) can publish a question automatically.
-  submitQuestion({
+  await submitQuestion({
     question_text: questionText,
     submitter_name: submitterName || null,
     submitter_email: submitterEmail,

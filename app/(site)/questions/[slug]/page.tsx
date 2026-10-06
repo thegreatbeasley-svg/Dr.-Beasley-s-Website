@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const question = getPublishedQuestionBySlug(slug);
+  const question = await getPublishedQuestionBySlug(slug);
   if (!question) {
     return buildMetadata({ title: "Not found", description: "", path: `/questions/${slug}`, index: false });
   }
@@ -24,7 +24,7 @@ export default async function QuestionDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const question = getPublishedQuestionBySlug(slug);
+  const question = await getPublishedQuestionBySlug(slug);
   if (!question) notFound();
 
   const paragraphs = (question.answer_body ?? "").split(/\n{2,}/).filter((p) => p.trim());

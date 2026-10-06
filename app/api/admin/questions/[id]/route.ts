@@ -11,7 +11,7 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getQuestionById(id);
+  const existing = await getQuestionById(id);
   if (!existing) {
     return NextResponse.json({ error: "Question not found" }, { status: 404 });
   }
@@ -39,7 +39,7 @@ export async function PUT(req: Request, { params }: Context) {
     );
   }
 
-  const question = updateQuestionAnswer(id, {
+  const question = await updateQuestionAnswer(id, {
     answer_body: answerBody || null,
     status: status as (typeof QUESTION_STATUSES)[number],
   });

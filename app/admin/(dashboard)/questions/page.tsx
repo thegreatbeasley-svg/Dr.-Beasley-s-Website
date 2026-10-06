@@ -13,9 +13,8 @@ const STATUS_STYLES: Record<string, string> = {
   rejected: "border border-tangerine-hover/60 text-tangerine-hover",
 };
 
-export default function AdminQuestionsPage() {
-  const questions = listAllQuestionsAdmin();
-  const stats = getQuestionStats();
+export default async function AdminQuestionsPage() {
+  const [questions, stats] = await Promise.all([listAllQuestionsAdmin(), getQuestionStats()]);
 
   return (
     <div>
