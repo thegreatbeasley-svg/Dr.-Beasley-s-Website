@@ -8,6 +8,8 @@ import { RESOURCE_FILES_DIR } from "@/lib/paths";
 import { createResource, slugify } from "@/lib/resources/queries";
 import { createArticle } from "@/lib/articles/queries";
 import type { ArticleContentType } from "@/lib/articles/types";
+import { createProject } from "@/lib/projects/queries";
+import { DEFAULT_RELATIONSHIP_NOTE } from "@/lib/projects/types";
 
 /**
  * Generates a short, clearly-labeled placeholder PDF entirely in-process
@@ -212,5 +214,30 @@ export async function seedDatabaseIfEmpty() {
       });
     }
     console.log(`[seed] Created ${SEED_ARTICLES.length} sample articles.`);
+  }
+
+  // Draft-only, unpublished: the brief names these two as possible initial
+  // entries, but Dr. Beasly's relationship to each is explicitly unconfirmed
+  // (DEFAULT_RELATIONSHIP_NOTE), so they're seeded hidden — an admin must
+  // review and publish deliberately, same as any other draft content here.
+  const projectCount = (
+    db.prepare(`SELECT COUNT(*) as count FROM projects`).get() as { count: number }
+  ).count;
+  if (projectCount === 0) {
+    const seedProjects = [
+      { name: "Continuum Wellness by Carolyn", description: null },
+      { name: "Continuum Lifestyle", description: null },
+    ];
+    for (const seed of seedProjects) {
+      createProject({
+        name: seed.name,
+        slug: slugify(seed.name),
+        relationship_note: DEFAULT_RELATIONSHIP_NOTE,
+        description: seed.description,
+        published: false,
+        featured: false,
+      });
+    }
+    console.log(`[seed] Created ${seedProjects.length} draft project entries (unpublished).`);
   }
 }

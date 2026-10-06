@@ -131,6 +131,7 @@ function migrate(db: Database.Database) {
       url TEXT,
       logo_path TEXT,
       published INTEGER NOT NULL DEFAULT 0,
+      featured INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -150,6 +151,18 @@ function migrate(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_resource_requests_lead ON resource_requests(lead_id);
     CREATE INDEX IF NOT EXISTS idx_questions_status ON questions(status);
   `);
+
+  // `CREATE TABLE IF NOT EXISTS` above only runs once per table — it does
+  // NOT add a column to a table that already exists from an earlier run.
+  // Any column added to an existing table after its first deploy needs an
+  // explicit, additive ALTER TABLE here instead (never a DROP/rewrite).
+  ensureColumn(db, "projects", "featured", "INTEGER NOT NULL DEFAULT 0");
+}
+
+function ensureColumn(db: Database.Database, table: string, column: string, definition: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (columns.some((c) => c.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
 
 function ensureDirectories() {
