@@ -8,7 +8,7 @@ export default async function EditResourcePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const resource = getResourceById(id);
+  const resource = await getResourceById(id);
   if (!resource) notFound();
 
   return (

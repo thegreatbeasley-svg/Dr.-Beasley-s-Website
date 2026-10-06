@@ -45,3 +45,6 @@ next-env.d.ts
 /data/
 /private-storage/
 /public/uploads/
+
+# Supabase CLI local-only state (not linked to a project in this repo)
+/supabase/.temp/

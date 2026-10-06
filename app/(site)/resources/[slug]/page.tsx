@@ -12,7 +12,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const resource = getPublishedResourceBySlug(slug);
+  const resource = await getPublishedResourceBySlug(slug);
   if (!resource) return buildMetadata({ title: "Resource not found", description: "", path: `/resources/${slug}`, index: false });
 
   return buildMetadata({
@@ -28,7 +28,7 @@ export default async function ResourceDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const resource = getPublishedResourceBySlug(slug);
+  const resource = await getPublishedResourceBySlug(slug);
 
   if (!resource) notFound();
 

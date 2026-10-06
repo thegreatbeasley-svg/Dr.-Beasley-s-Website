@@ -4,8 +4,8 @@ import AdminResourcesTable from "@/app/components/admin/AdminResourcesTable";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminResourcesPage() {
-  const resources = listAllResourcesAdmin();
+export default async function AdminResourcesPage() {
+  const resources = await listAllResourcesAdmin();
 
   return (
     <div>

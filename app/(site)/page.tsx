@@ -26,11 +26,16 @@ function pickFeatured<T extends { featured: boolean }>(items: T[], count: number
   return [...featured, ...rest].slice(0, count);
 }
 
-export default function HomePage() {
-  const featuredResources = pickFeatured(listPublishedResources(), 3);
-  const featuredBooks = pickFeatured(listPublishedBooks(), 3);
-  const questions = listPublishedQuestions();
-  const featuredProject = listPublishedProjects();
+export default async function HomePage() {
+  const [resources, books, questions, projects] = await Promise.all([
+    listPublishedResources(),
+    listPublishedBooks(),
+    listPublishedQuestions(),
+    listPublishedProjects(),
+  ]);
+  const featuredResources = pickFeatured(resources, 3);
+  const featuredBooks = pickFeatured(books, 3);
+  const featuredProject = projects;
 
   return (
     <>

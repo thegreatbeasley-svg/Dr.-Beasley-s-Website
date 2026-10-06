@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isSlugTaken(slug)) {
+  if (await isSlugTaken(slug)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const resource = createResource({
+  const resource = await createResource({
     title,
     slug,
     short_description: shortDescription,

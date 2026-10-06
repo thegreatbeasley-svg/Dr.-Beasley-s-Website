@@ -20,7 +20,7 @@ export async function PATCH(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getResourceById(id);
+  const existing = await getResourceById(id);
   if (!existing) {
     return NextResponse.json({ error: "Resource not found" }, { status: 404 });
   }
@@ -36,7 +36,7 @@ export async function PATCH(req: Request, { params }: Context) {
   if (typeof body.published === "boolean") patch.published = body.published;
   if (typeof body.featured === "boolean") patch.featured = body.featured;
 
-  const resource = updateResource(id, patch);
+  const resource = await updateResource(id, patch);
   return NextResponse.json({ success: true, resource });
 }
 
@@ -46,7 +46,7 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const existing = getResourceById(id);
+  const existing = await getResourceById(id);
   if (!existing) {
     return NextResponse.json({ error: "Resource not found" }, { status: 404 });
   }
@@ -76,14 +76,14 @@ export async function PUT(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
   }
 
-  if (isSlugTaken(slug, id)) {
+  if (await isSlugTaken(slug, id)) {
     return NextResponse.json(
       { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
       { status: 400 }
     );
   }
 
-  updateResource(id, {
+  await updateResource(id, {
     title,
     slug,
     short_description: shortDescription,
@@ -114,5 +114,5 @@ export async function PUT(req: Request, { params }: Context) {
     }
   }
 
-  return NextResponse.json({ success: true, resource: getResourceById(id) });
+  return NextResponse.json({ success: true, resource: await getResourceById(id) });
 }

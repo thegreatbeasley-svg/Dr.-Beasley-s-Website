@@ -9,9 +9,8 @@ function formatDate(iso: string) {
   });
 }
 
-export default function AdminLeadsPage() {
-  const leads = listLeadsAdmin();
-  const stats = getLeadStats();
+export default async function AdminLeadsPage() {
+  const [leads, stats] = await Promise.all([listLeadsAdmin(), getLeadStats()]);
 
   return (
     <div>

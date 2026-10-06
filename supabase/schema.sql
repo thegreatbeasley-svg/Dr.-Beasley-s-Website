@@ -107,3 +107,63 @@ values ('cover-images', 'cover-images', true, 5242880,
   array['image/png','image/jpeg','image/webp'])
 on conflict (id) do update set public = excluded.public,
   file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+-- Atomic lead-capture + resource-request creation. Mirrors the exact
+-- business logic of the SQLite path's captureLeadAndRequestResource
+-- (lib/resources/queries.ts): email-keyed upsert, name/city always
+-- overwritten to the latest submission, consent can only ever turn ON
+-- here (never silently revoked by a later unchecked request), and
+-- updates_opt_in_at is set once. Runs as a single statement so a lead
+-- can never be created without its request, or vice versa.
+create or replace function public.capture_lead_and_request(
+  p_name text,
+  p_email text,
+  p_city text,
+  p_opt_in boolean,
+  p_resource_id uuid
+) returns jsonb
+language plpgsql
+as $$
+declare
+  v_lead_id uuid;
+  v_existing_opt_in boolean;
+  v_next_opt_in boolean;
+  v_now timestamptz := now();
+  v_request_id uuid;
+  v_email text := lower(p_email);
+begin
+  select id, updates_opt_in into v_lead_id, v_existing_opt_in
+  from public.leads where email = v_email;
+
+  if v_lead_id is null then
+    v_next_opt_in := p_opt_in;
+    insert into public.leads
+      (id, name, city, email, updates_opt_in, updates_opt_in_at, created_at, updated_at)
+    values (gen_random_uuid(), p_name, p_city, v_email, v_next_opt_in,
+            case when v_next_opt_in then v_now else null end, v_now, v_now)
+    returning id into v_lead_id;
+  else
+    v_next_opt_in := v_existing_opt_in or p_opt_in;
+    update public.leads set
+      name = p_name,
+      city = p_city,
+      updates_opt_in = v_next_opt_in,
+      updates_opt_in_at = case
+        when v_next_opt_in and updates_opt_in_at is null then v_now
+        else updates_opt_in_at
+      end,
+      updated_at = v_now
+    where id = v_lead_id;
+  end if;
+
+  insert into public.resource_requests (id, lead_id, resource_id, opted_in_this_request, requested_at)
+  values (gen_random_uuid(), v_lead_id, p_resource_id, p_opt_in, v_now)
+  returning id into v_request_id;
+
+  return jsonb_build_object(
+    'lead_id', v_lead_id,
+    'request_id', v_request_id,
+    'requested_at', v_now
+  );
+end;
+$$;

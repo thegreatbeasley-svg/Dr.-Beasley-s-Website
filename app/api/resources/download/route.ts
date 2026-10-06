@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import { NextResponse } from "next/server";
 import { getResourceRequestWithResource } from "@/lib/resources/queries";
 import { resolveResourceFilePath } from "@/lib/db";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 function contentDispositionFileName(name: string) {
   // Strip anything that could break out of the header value or introduce
@@ -24,7 +26,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  const found = getResourceRequestWithResource(token);
+  const found = await getResourceRequestWithResource(token);
   if (!found) {
     return NextResponse.redirect(new URL("/?download=not-found", req.url));
   }
@@ -32,6 +34,20 @@ export async function GET(req: Request) {
   const { resource } = found;
   if (!resource.published) {
     return NextResponse.redirect(new URL("/?download=unavailable", req.url));
+  }
+
+  if (isSupabaseConfigured()) {
+    // Short-lived signed URL from the private bucket — the real storage
+    // path is never exposed, and a fresh one is minted on every hit (so
+    // the public link itself still only ever carries the opaque token).
+    const { data, error } = await createSupabaseAdminClient()
+      .storage.from("resource-files")
+      .createSignedUrl(resource.file_path, 60);
+    if (error || !data) {
+      console.error("Failed to create signed download URL:", error?.message);
+      return NextResponse.redirect(new URL("/?download=unavailable", req.url));
+    }
+    return NextResponse.redirect(data.signedUrl);
   }
 
   let buffer: Buffer;

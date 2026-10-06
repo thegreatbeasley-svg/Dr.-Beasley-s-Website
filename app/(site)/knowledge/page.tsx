@@ -15,9 +15,8 @@ export const metadata = buildMetadata({
   path: "/knowledge",
 });
 
-export default function KnowledgeHubPage() {
-  const resources = listPublishedResources();
-  const articles = listPublishedArticles();
+export default async function KnowledgeHubPage() {
+  const [resources, articles] = await Promise.all([listPublishedResources(), listPublishedArticles()]);
 
   const items: KnowledgeItem[] = [
     ...resources.map((r) => ({

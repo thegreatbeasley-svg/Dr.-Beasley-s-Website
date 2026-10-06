@@ -39,14 +39,14 @@ export async function POST(req: Request) {
 
   // Publication state is checked here, at request time — an unpublished
   // (or since-unpublished) resource can never be requested.
-  const resource = getPublishedResourceBySlug(resourceSlug);
+  const resource = await getPublishedResourceBySlug(resourceSlug);
   if (!resource) {
     return NextResponse.json({ error: "This resource is not available." }, { status: 404 });
   }
 
   let request;
   try {
-    ({ request } = captureLeadAndRequestResource({
+    ({ request } = await captureLeadAndRequestResource({
       name,
       email,
       city: city || null,
