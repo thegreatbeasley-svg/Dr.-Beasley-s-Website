@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -29,13 +30,13 @@ export default function Hero() {
             your own pace.
           </p>
           <div className="mt-9">
-            <a
-              href="#library"
+            <Link
+              href="/knowledge"
               className="inline-flex items-center gap-2 rounded-full bg-tangerine px-8 py-4 text-sm font-semibold uppercase tracking-widest text-tangerine-ink transition-colors hover:bg-tangerine-hover"
             >
               Explore free resources
               <span aria-hidden="true">&darr;</span>
-            </a>
+            </Link>
           </div>
         </div>
 

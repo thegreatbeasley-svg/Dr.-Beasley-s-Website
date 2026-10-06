@@ -35,10 +35,10 @@ export default async function ResourceDetailPage({
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 sm:py-20">
       <Link
-        href="/#library"
+        href="/knowledge"
         className="text-sm font-medium text-gold underline-offset-4 hover:underline"
       >
-        &larr; Back to the library
+        &larr; Back to the Knowledge Hub
       </Link>
       <div className="mt-8">
         <ResourceDetail resource={resource} />
