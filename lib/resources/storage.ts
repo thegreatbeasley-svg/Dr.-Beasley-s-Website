@@ -21,6 +21,146 @@ const ALLOWED_COVER_TYPES: Record<string, string> = {
 
 export class UploadError extends Error {}
 
+// ============================================================
+// Direct-to-Supabase-Storage uploads (Supabase mode only)
+//
+// Large PDFs exceed Vercel's hard 4.5MB serverless function request-body
+// limit if they're streamed through our own API route. Instead, in
+// Supabase mode, the browser uploads straight to Supabase Storage using a
+// short-lived, single-path, single-use signed upload URL that our server
+// mints — the request body our Vercel function ever sees is just a few
+// bytes of JSON, never the file itself.
+//
+// The bucket, storage path, permitted MIME types, and byte ceiling are
+// always chosen here, server-side, from a fixed "upload kind" — never
+// from anything the browser sends. The browser only ever says *which*
+// kind of file it's about to upload.
+// ============================================================
+
+export type UploadKind = "resource-pdf" | "resource-cover";
+
+type UploadKindConfig = {
+  bucket: string;
+  maxBytes: number;
+  allowedTypes: Record<string, string>; // contentType -> file extension
+};
+
+const UPLOAD_KINDS: Record<UploadKind, UploadKindConfig> = {
+  "resource-pdf": {
+    bucket: "resource-files",
+    maxBytes: MAX_PDF_BYTES,
+    allowedTypes: { "application/pdf": ".pdf" },
+  },
+  "resource-cover": {
+    bucket: "cover-images",
+    maxBytes: MAX_COVER_BYTES,
+    allowedTypes: ALLOWED_COVER_TYPES,
+  },
+};
+
+function uploadKindConfig(kind: string): UploadKindConfig {
+  const config = UPLOAD_KINDS[kind as UploadKind];
+  if (!config) throw new UploadError("Unknown upload kind.");
+  return config;
+}
+
+/**
+ * Mints a short-lived, single-use signed upload URL for one specific,
+ * server-generated storage path. No database row exists yet at this
+ * point — if the admin abandons the upload here, nothing was ever
+ * written anywhere, so there is nothing to clean up.
+ */
+export async function createUploadSlot(kind: string, contentType: string, claimedSize: number) {
+  const config = uploadKindConfig(kind);
+  if (!Number.isFinite(claimedSize) || claimedSize <= 0 || claimedSize > config.maxBytes) {
+    throw new UploadError(`That file exceeds the ${Math.round(config.maxBytes / (1024 * 1024))}MB limit.`);
+  }
+  const extension = config.allowedTypes[contentType];
+  if (!extension) {
+    throw new UploadError("That file type isn't allowed.");
+  }
+
+  const path = safeFileName(extension);
+  const { data, error } = await createSupabaseAdminClient()
+    .storage.from(config.bucket)
+    .createSignedUploadUrl(path);
+  if (error || !data) {
+    throw new UploadError(`Could not prepare the upload: ${error?.message ?? "unknown error"}`);
+  }
+  return { bucket: config.bucket, path, token: data.token };
+}
+
+/**
+ * Finalization-time check: re-reads the object's *actual* stored size and
+ * content type from Supabase Storage itself — never trusts whatever the
+ * browser claimed when requesting the upload slot. Also sniffs the real
+ * file bytes for PDFs, since a client-supplied MIME type is just a label.
+ * On any failure the just-uploaded object is deleted so a failed
+ * verification never leaves an orphaned file behind.
+ */
+export async function verifyUploadedObject(
+  kind: string,
+  objectPath: string
+): Promise<{ size: number; contentType: string }> {
+  const config = uploadKindConfig(kind);
+  const supabase = createSupabaseAdminClient();
+
+  const { data: listing, error: listError } = await supabase.storage
+    .from(config.bucket)
+    .list("", { search: objectPath, limit: 1 });
+  if (listError) {
+    throw new UploadError(`Could not verify the uploaded file: ${listError.message}`);
+  }
+  const object = listing?.find((entry) => entry.name === objectPath);
+  if (!object) {
+    throw new UploadError("The uploaded file could not be found. Please try uploading it again.");
+  }
+
+  const size = object.metadata?.size as number | undefined;
+  const contentType = object.metadata?.mimetype as string | undefined;
+
+  const reject = async (message: string): Promise<never> => {
+    await supabase.storage.from(config.bucket).remove([objectPath]);
+    throw new UploadError(message);
+  };
+
+  if (!size || size <= 0 || size > config.maxBytes) {
+    return reject(`The uploaded file is invalid or exceeds the ${Math.round(config.maxBytes / (1024 * 1024))}MB limit.`);
+  }
+  if (!contentType || !config.allowedTypes[contentType]) {
+    return reject("The uploaded file's type is not allowed.");
+  }
+
+  if (kind === "resource-pdf") {
+    const { data: signed, error: signError } = await supabase.storage
+      .from(config.bucket)
+      .createSignedUrl(objectPath, 60);
+    if (signError || !signed) {
+      return reject("Could not verify the uploaded file.");
+    }
+    const head = await fetch(signed.signedUrl, { headers: { Range: "bytes=0-4" } });
+    const headBytes = Buffer.from(await head.arrayBuffer());
+    if (headBytes.subarray(0, 5).toString("ascii") !== "%PDF-") {
+      return reject("That file doesn't look like a valid PDF.");
+    }
+  }
+
+  return { size, contentType };
+}
+
+/** Deletes a just-uploaded object that a failed finalization must not keep. */
+export async function deleteUploadedObject(kind: string, objectPath: string) {
+  const config = UPLOAD_KINDS[kind as UploadKind];
+  if (!config) return;
+  await createSupabaseAdminClient().storage.from(config.bucket).remove([objectPath]);
+}
+
+/** Converts a verified cover-images object path into its stored public URL form. */
+export function getUploadedCoverPublicUrl(objectPath: string) {
+  const { data } = createSupabaseAdminClient().storage.from("cover-images").getPublicUrl(objectPath);
+  return data.publicUrl;
+}
+
 /**
  * Every uploaded file gets a fresh, server-generated name — the visitor's
  * original filename and any path segments in it are discarded entirely.

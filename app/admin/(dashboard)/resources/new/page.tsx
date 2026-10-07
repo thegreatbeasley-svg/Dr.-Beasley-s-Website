@@ -1,4 +1,5 @@
 import ResourceForm from "@/app/components/admin/ResourceForm";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export default function NewResourcePage() {
   return (
@@ -8,7 +9,7 @@ export default function NewResourcePage() {
         Upload a PDF, add a description, and choose whether it&rsquo;s visible on the public site.
       </p>
       <div className="mt-8">
-        <ResourceForm mode="create" />
+        <ResourceForm mode="create" directUpload={isSupabaseConfigured()} />
       </div>
     </div>
   );

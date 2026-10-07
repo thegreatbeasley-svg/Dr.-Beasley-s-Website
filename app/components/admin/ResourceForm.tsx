@@ -4,20 +4,57 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { RESOURCE_TYPES } from "@/lib/resources/types";
 import type { Resource } from "@/lib/resources/types";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type Props = {
   mode: "create" | "edit";
   resourceId?: string;
   initial?: Resource;
+  /**
+   * True only in Supabase mode (decided server-side by the page that
+   * renders this form). When true, the PDF/cover are uploaded directly to
+   * Supabase Storage via a short-lived signed URL instead of through our
+   * own API route — Vercel's serverless functions reject any request body
+   * over 4.5MB, which a 25MB PDF would otherwise always exceed.
+   */
+  directUpload?: boolean;
 };
+
+async function uploadDirectly(
+  kind: "resource-pdf" | "resource-cover",
+  file: File,
+  onProgress: (message: string) => void
+): Promise<string> {
+  onProgress(kind === "resource-pdf" ? "Preparing PDF upload…" : "Preparing cover upload…");
+  const signRes = await fetch("/api/admin/uploads/sign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, contentType: file.type, size: file.size }),
+  });
+  const signData = await signRes.json();
+  if (!signRes.ok) {
+    throw new Error(signData.error || "Could not prepare the upload.");
+  }
+
+  onProgress(kind === "resource-pdf" ? "Uploading PDF…" : "Uploading cover…");
+  const { error } = await getSupabaseBrowserClient()
+    .storage.from(signData.bucket)
+    .uploadToSignedUrl(signData.path, signData.token, file);
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+
+  return signData.path as string;
+}
 
 const inputClass =
   "w-full rounded-lg border border-white/15 bg-ink px-4 py-3 text-paper focus:border-gold focus:outline-none";
 const labelClass = "mb-2 block text-sm text-paper-muted";
 
-export default function ResourceForm({ mode, resourceId, initial }: Props) {
+export default function ResourceForm({ mode, resourceId, initial, directUpload = false }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = React.useState(false);
+  const [progress, setProgress] = React.useState("");
   const [error, setError] = React.useState("");
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
 
@@ -49,9 +86,16 @@ export default function ResourceForm({ mode, resourceId, initial }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (mode === "create" && !file) {
+      setFieldErrors({ file: "A PDF file is required." });
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     setFieldErrors({});
+    setProgress("");
 
     const formData = new FormData();
     formData.set("title", title);
@@ -61,15 +105,23 @@ export default function ResourceForm({ mode, resourceId, initial }: Props) {
     formData.set("resource_type", resourceType);
     formData.set("published", String(published));
     formData.set("featured", String(featured));
-    if (file) formData.set("file", file);
-    if (cover) formData.set("cover", cover);
 
-    if (mode === "create" && !file) {
-      setFieldErrors({ file: "A PDF file is required." });
+    try {
+      if (directUpload) {
+        if (file) formData.set("file_path", await uploadDirectly("resource-pdf", file, setProgress));
+        if (cover) formData.set("cover_path", await uploadDirectly("resource-cover", cover, setProgress));
+      } else {
+        if (file) formData.set("file", file);
+        if (cover) formData.set("cover", cover);
+      }
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Could not upload the file.");
       setSubmitting(false);
+      setProgress("");
       return;
     }
 
+    setProgress("Saving…");
     try {
       const res = await fetch(
         mode === "create" ? "/api/admin/resources" : `/api/admin/resources/${resourceId}`,
@@ -80,13 +132,19 @@ export default function ResourceForm({ mode, resourceId, initial }: Props) {
         setFieldErrors(data.fieldErrors || {});
         setError(data.error || "Something went wrong. Please try again.");
         setSubmitting(false);
+        setProgress("");
         return;
       }
       router.push("/admin/resources");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please check your connection and try again.");
+      setError(
+        directUpload
+          ? "The file uploaded, but saving the resource failed. Please check your connection and try again."
+          : "Something went wrong. Please check your connection and try again."
+      );
       setSubmitting(false);
+      setProgress("");
     }
   };
 
@@ -241,7 +299,7 @@ export default function ResourceForm({ mode, resourceId, initial }: Props) {
         </p>
       )}
 
-      <div className="flex gap-4">
+      <div className="flex items-center gap-4">
         <button
           type="submit"
           disabled={submitting}
@@ -249,6 +307,7 @@ export default function ResourceForm({ mode, resourceId, initial }: Props) {
         >
           {submitting ? "Saving…" : mode === "create" ? "Create resource" : "Save changes"}
         </button>
+        {submitting && progress && <span className="text-sm text-paper-muted">{progress}</span>}
       </div>
     </form>
   );

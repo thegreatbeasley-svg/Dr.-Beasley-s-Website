@@ -8,7 +8,15 @@ import {
   replaceResourceFile,
   replaceCoverImage,
 } from "@/lib/resources/queries";
-import { saveResourceFile, saveCoverImage, UploadError } from "@/lib/resources/storage";
+import {
+  saveResourceFile,
+  saveCoverImage,
+  verifyUploadedObject,
+  deleteUploadedObject,
+  getUploadedCoverPublicUrl,
+  UploadError,
+} from "@/lib/resources/storage";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { RESOURCE_TYPES } from "@/lib/resources/types";
 import { clean } from "@/lib/validation";
 
@@ -94,23 +102,54 @@ export async function PUT(req: Request, { params }: Context) {
     featured,
   });
 
-  if (file instanceof File && file.size > 0) {
-    try {
-      const saved = await saveResourceFile(file);
-      await replaceResourceFile(id, saved.fileName, saved.size);
-    } catch (error) {
-      const message = error instanceof UploadError ? error.message : "Could not save the uploaded file.";
-      return NextResponse.json({ error: "Invalid submission", fieldErrors: { file: message } }, { status: 400 });
+  if (isSupabaseConfigured()) {
+    // The browser already uploaded any replacement file/cover directly to
+    // Supabase Storage; the form sends back raw storage paths, which are
+    // independently re-verified here before the existing file is ever
+    // replaced. The OLD object is only deleted once replaceResourceFile /
+    // replaceCoverImage has successfully pointed the row at the new one.
+    const filePath = clean(formData.get("file_path"), 200);
+    if (filePath) {
+      try {
+        const verified = await verifyUploadedObject("resource-pdf", filePath);
+        await replaceResourceFile(id, filePath, verified.size);
+      } catch (error) {
+        await deleteUploadedObject("resource-pdf", filePath);
+        const message = error instanceof UploadError ? error.message : "Could not save the uploaded file.";
+        return NextResponse.json({ error: "Invalid submission", fieldErrors: { file: message } }, { status: 400 });
+      }
     }
-  }
 
-  if (cover instanceof File && cover.size > 0) {
-    try {
-      const saved = await saveCoverImage(cover);
-      await replaceCoverImage(id, saved.path);
-    } catch (error) {
-      const message = error instanceof UploadError ? error.message : "Could not save the cover image.";
-      return NextResponse.json({ error: "Invalid submission", fieldErrors: { cover: message } }, { status: 400 });
+    const coverPath = clean(formData.get("cover_path"), 200);
+    if (coverPath) {
+      try {
+        await verifyUploadedObject("resource-cover", coverPath);
+        await replaceCoverImage(id, getUploadedCoverPublicUrl(coverPath));
+      } catch (error) {
+        await deleteUploadedObject("resource-cover", coverPath);
+        const message = error instanceof UploadError ? error.message : "Could not save the cover image.";
+        return NextResponse.json({ error: "Invalid submission", fieldErrors: { cover: message } }, { status: 400 });
+      }
+    }
+  } else {
+    if (file instanceof File && file.size > 0) {
+      try {
+        const saved = await saveResourceFile(file);
+        await replaceResourceFile(id, saved.fileName, saved.size);
+      } catch (error) {
+        const message = error instanceof UploadError ? error.message : "Could not save the uploaded file.";
+        return NextResponse.json({ error: "Invalid submission", fieldErrors: { file: message } }, { status: 400 });
+      }
+    }
+
+    if (cover instanceof File && cover.size > 0) {
+      try {
+        const saved = await saveCoverImage(cover);
+        await replaceCoverImage(id, saved.path);
+      } catch (error) {
+        const message = error instanceof UploadError ? error.message : "Could not save the cover image.";
+        return NextResponse.json({ error: "Invalid submission", fieldErrors: { cover: message } }, { status: 400 });
+      }
     }
   }
 
