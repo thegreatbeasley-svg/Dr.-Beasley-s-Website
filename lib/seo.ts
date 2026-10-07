@@ -19,6 +19,15 @@ export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * TEMPORARY LAUNCH GATE — the site is publicly reachable but not yet
+ * announced, so every page stays out of search results until there is an
+ * explicit decision to launch. Flip this to `false` (and nothing else) to
+ * open the site back up to indexing; `app/robots.ts` carries the matching
+ * site-wide disallow and should be reverted in the same change.
+ */
+export const PRE_LAUNCH_NOINDEX = true;
+
 type PageMetadataInput = {
   title: string;
   description: string;
@@ -29,11 +38,12 @@ type PageMetadataInput = {
 
 export function buildMetadata({ title, description, path, index = true }: PageMetadataInput): Metadata {
   const url = absoluteUrl(path);
+  const shouldIndex = index && !PRE_LAUNCH_NOINDEX;
   return {
     title,
     description,
     alternates: { canonical: url },
-    robots: index ? { index: true, follow: true } : { index: false, follow: false },
+    robots: shouldIndex ? { index: true, follow: true } : { index: false, follow: false },
     openGraph: {
       title,
       description,
@@ -48,7 +58,3 @@ export function buildMetadata({ title, description, path, index = true }: PageMe
     },
   };
 }
-
-/** Local demo note repeated in a few places — single source of truth. */
-export const DEMO_DISCLAIMER =
-  "This is a local, working demo. Nothing on this site is a verified biography, and no content here should be treated as a live, production website.";

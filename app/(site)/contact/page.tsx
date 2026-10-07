@@ -1,5 +1,8 @@
 import ContactForm from "@/app/components/contact/ContactForm";
 import { buildMetadata } from "@/lib/seo";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "Contact — Dr. Virgil Beasly",
@@ -25,7 +28,7 @@ export default function ContactPage() {
       </div>
 
       <div className="mt-12">
-        <ContactForm />
+        <ContactForm isLocalDemo={!isSupabaseConfigured()} />
       </div>
     </div>
   );

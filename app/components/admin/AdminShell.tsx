@@ -14,7 +14,13 @@ const NAV_ITEMS = [
   { href: "/admin/enquiries", label: "Enquiries" },
 ];
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+  isLocalDemo = false,
+}: {
+  children: React.ReactNode;
+  isLocalDemo?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = React.useState(false);
@@ -32,9 +38,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">
-              Local demo admin
+              {isLocalDemo ? "Local demo admin" : "Admin"}
             </p>
-            <p className="text-sm text-paper-muted">Dr. Virgil Beasly — Resource Library</p>
+            <p className="text-sm text-paper-muted">Dr. Virgil Beasly</p>
           </div>
           <nav className="flex items-center gap-6" aria-label="Admin">
             {NAV_ITEMS.map((item) => (

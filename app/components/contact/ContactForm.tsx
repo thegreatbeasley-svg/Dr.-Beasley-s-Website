@@ -5,7 +5,7 @@ import { ENQUIRY_TOPICS, ENQUIRY_TOPIC_LABELS } from "@/lib/contact/types";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ContactForm() {
+export default function ContactForm({ isLocalDemo = false }: { isLocalDemo?: boolean }) {
   const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = React.useState("");
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
@@ -64,8 +64,9 @@ export default function ContactForm() {
       <div className="rounded-2xl border border-gold/30 bg-ink-elevated p-6" role="status">
         <h3 className="text-lg font-medium text-paper">Thanks — your message is saved</h3>
         <p className="mt-2 text-sm text-paper-muted">
-          This demo saves enquiries locally; no email is sent. In production this would reach the
-          team directly.
+          {isLocalDemo
+            ? "This demo saves enquiries locally; no email is sent. In production this would reach the team directly."
+            : "Your message has been saved. Email delivery isn't connected yet, so please allow some time for a direct reply."}
         </p>
         <button
           type="button"

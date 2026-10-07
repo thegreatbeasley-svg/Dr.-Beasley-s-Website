@@ -7,13 +7,19 @@ type Props = {
   resourceTitle: string;
   /** Lets the parent (e.g. a modal) move focus to the success message. */
   onSuccess?: () => void;
+  isLocalDemo?: boolean;
 };
 
 type Status = "idle" | "submitting" | "success" | "error";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ResourceRequestForm({ resourceSlug, resourceTitle, onSuccess }: Props) {
+export default function ResourceRequestForm({
+  resourceSlug,
+  resourceTitle,
+  onSuccess,
+  isLocalDemo = false,
+}: Props) {
   const [status, setStatus] = React.useState<Status>("idle");
   const [errorMessage, setErrorMessage] = React.useState("");
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
@@ -97,7 +103,9 @@ export default function ResourceRequestForm({ resourceSlug, resourceTitle, onSuc
           Download now
         </a>
         <p className="text-xs text-paper-muted/70">
-          This demo saves your request locally. Email delivery is not connected yet.
+          {isLocalDemo
+            ? "This demo saves your request locally. Email delivery is not connected yet."
+            : "Email delivery is not connected yet — your request has been saved."}
         </p>
       </div>
     );
@@ -202,7 +210,9 @@ export default function ResourceRequestForm({ resourceSlug, resourceTitle, onSuc
       </button>
 
       <p className="text-xs text-paper-muted/70">
-        This demo saves your request locally. Email delivery is not connected yet.
+        {isLocalDemo
+          ? "This demo saves your request locally. Email delivery is not connected yet."
+          : "Email delivery is not connected yet — your request will be saved."}
       </p>
     </form>
   );

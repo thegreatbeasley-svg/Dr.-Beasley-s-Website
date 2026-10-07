@@ -40,7 +40,7 @@ export async function GET(req: Request) {
               color: "#cdc3b2",
             }}
           >
-            The Resource Library
+            Dr. Virgil Beasly
           </div>
           <div
             style={{

@@ -1,4 +1,7 @@
 import { buildMetadata } from "@/lib/seo";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "Privacy — Dr. Virgil Beasly",
@@ -7,30 +10,35 @@ export const metadata = buildMetadata({
   index: false,
 });
 
-const SECTIONS = [
-  {
-    heading: "What this page is",
-    body: "This is a placeholder structure for a privacy policy, not a final, reviewed legal document. Nothing on this page should be treated as a binding commitment.",
-  },
-  {
-    heading: "What this demo actually does today",
-    body: "Name, city, email, and consent choices submitted through this site's forms (resource requests, question submissions, contact enquiries) are saved to a local database on this machine only. No email is sent, no data is shared with any third party, and nothing is tracked beyond what's needed to run the form itself.",
-  },
-  {
-    heading: "Data you submit",
-    body: "[Draft — to be completed] What's collected, why, how long it's kept, and how someone can request its deletion.",
-  },
-  {
-    heading: "Cookies & analytics",
-    body: "[Draft — to be completed] This demo does not currently use analytics or marketing cookies.",
-  },
-  {
-    heading: "Contact about this policy",
-    body: "[Draft — to be completed] A real privacy contact will be added once finalized.",
-  },
-];
+function buildSections(isLocalDemo: boolean) {
+  return [
+    {
+      heading: "What this page is",
+      body: "This is a placeholder structure for a privacy policy, not a final, reviewed legal document. Nothing on this page should be treated as a binding commitment.",
+    },
+    {
+      heading: "What this site actually does today",
+      body: isLocalDemo
+        ? "Name, city, email, and consent choices submitted through this site's forms (resource requests, question submissions, contact enquiries) are saved to a local database on this machine only. No email is sent, no data is shared with any third party, and nothing is tracked beyond what's needed to run the form itself."
+        : "Name, city, email, and consent choices submitted through this site's forms (resource requests, question submissions, contact enquiries) are saved to this site's database. No email is sent yet, no data is shared with any third party, and nothing is tracked beyond what's needed to run the form itself.",
+    },
+    {
+      heading: "Data you submit",
+      body: "[Draft — to be completed] What's collected, why, how long it's kept, and how someone can request its deletion.",
+    },
+    {
+      heading: "Cookies & analytics",
+      body: "[Draft — to be completed] This site does not currently use analytics or marketing cookies.",
+    },
+    {
+      heading: "Contact about this policy",
+      body: "[Draft — to be completed] A real privacy contact will be added once finalized.",
+    },
+  ];
+}
 
 export default function PrivacyPage() {
+  const SECTIONS = buildSections(!isSupabaseConfigured());
   return (
     <div className="mx-auto max-w-2xl px-6 py-20 sm:py-24">
       <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">Draft</p>

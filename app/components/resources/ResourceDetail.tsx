@@ -6,9 +6,10 @@ type Props = {
   resource: Resource;
   headingId?: string;
   onFormSuccess?: () => void;
+  isLocalDemo?: boolean;
 };
 
-export default function ResourceDetail({ resource, headingId, onFormSuccess }: Props) {
+export default function ResourceDetail({ resource, headingId, onFormSuccess, isLocalDemo = false }: Props) {
   return (
     <div className="grid gap-8 md:grid-cols-[minmax(0,220px)_1fr] md:gap-10">
       <div className="mx-auto w-40 sm:w-48 md:mx-0 md:w-full">
@@ -54,6 +55,7 @@ export default function ResourceDetail({ resource, headingId, onFormSuccess }: P
               resourceSlug={resource.slug}
               resourceTitle={resource.title}
               onSuccess={onFormSuccess}
+              isLocalDemo={isLocalDemo}
             />
           </div>
         </div>

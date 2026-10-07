@@ -1,5 +1,6 @@
 import SiteHeader from "@/app/components/layout/SiteHeader";
 import Footer from "@/app/components/Footer";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
  * Shared chrome for every public-facing page (home, about, knowledge,
@@ -9,11 +10,12 @@ import Footer from "@/app/components/Footer";
  * `AdminShell` layout and never sees this header/footer.
  */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
+  const isLocalDemo = !isSupabaseConfigured();
   return (
     <>
-      <SiteHeader />
+      <SiteHeader isLocalDemo={isLocalDemo} />
       <main className="flex flex-1 flex-col">{children}</main>
-      <Footer />
+      <Footer isLocalDemo={isLocalDemo} />
     </>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import ResourceDetail from "@/app/components/resources/ResourceDetail";
 import { getPublishedResourceBySlug } from "@/lib/resources/queries";
 import { buildMetadata } from "@/lib/seo";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function ResourceDetailPage({
         &larr; Back to the Knowledge Hub
       </Link>
       <div className="mt-8">
-        <ResourceDetail resource={resource} />
+        <ResourceDetail resource={resource} isLocalDemo={!isSupabaseConfigured()} />
       </div>
     </div>
   );

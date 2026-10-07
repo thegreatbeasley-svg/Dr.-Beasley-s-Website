@@ -17,7 +17,7 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
-export default function SiteHeader() {
+export default function SiteHeader({ isLocalDemo = false }: { isLocalDemo?: boolean }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const closeMenu = () => setMenuOpen(false);
@@ -27,9 +27,11 @@ export default function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-sm font-semibold tracking-wide text-paper">
           Dr. Virgil Beasly
-          <span className="ml-2 hidden text-xs font-normal uppercase tracking-widest text-paper-muted sm:inline">
-            Local demo
-          </span>
+          {isLocalDemo && (
+            <span className="ml-2 hidden text-xs font-normal uppercase tracking-widest text-paper-muted sm:inline">
+              Local demo
+            </span>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Primary">
