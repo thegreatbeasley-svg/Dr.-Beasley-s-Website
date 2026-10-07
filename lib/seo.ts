@@ -10,10 +10,18 @@
 import type { Metadata } from "next";
 
 export const SITE_NAME = "Dr. Virgil Beasly";
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(
-  /\/$/,
-  ""
-);
+
+/**
+ * NEXT_PUBLIC_SITE_URL is the explicit, intentional value (set for
+ * Production). VERCEL_URL is a fallback Vercel sets automatically on
+ * every deployment (Preview included) to that exact deployment's own
+ * URL — without it, every Preview build would wrongly report
+ * "localhost" in its canonical links, sitemap, and OG tags.
+ */
+const DEFAULT_SITE_URL = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL).replace(/\/$/, "");
 
 export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
