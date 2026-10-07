@@ -3,40 +3,51 @@ import type { PublishedQuestion } from "@/lib/questions/types";
 
 export default function FeaturedQuestion({ question }: { question: PublishedQuestion | null }) {
   return (
-    <section className="border-t border-white/10 bg-ink-elevated/30">
-      <div className="mx-auto max-w-3xl px-6 py-20 text-center sm:py-24">
-        <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">Questions &amp; Answers</p>
-        {question ? (
-          <>
-            <h2 className="mt-5 text-2xl font-medium text-paper sm:text-3xl">{question.question_text}</h2>
+    <section className="border-b border-white/10">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 py-20 sm:py-24 md:grid-cols-2 md:items-center md:gap-16">
+        <div className="text-center md:text-left">
+          <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+            A Living Conversation
+          </p>
+          <h2 className="mt-4 text-3xl font-medium leading-snug text-paper sm:text-4xl">
+            Every meaningful answer begins with a better question.
+          </h2>
+          <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-paper-muted md:mx-0">
+            Ask Dr. Beasly a question about intimacy, resilience, wellbeing, purposeful living or
+            the possibilities that come with change. Selected questions may become part of the
+            public collection, allowing one person&rsquo;s curiosity to help many others.
+          </p>
+          <div className="mt-8">
+            <Link
+              href="/questions"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-tangerine px-8 py-4 text-sm font-semibold uppercase tracking-widest text-tangerine-ink transition-colors hover:bg-tangerine-hover"
+            >
+              Ask Dr. Beasly
+            </Link>
+          </div>
+        </div>
+
+        {question && (
+          <div className="rounded-2xl border border-white/10 bg-ink-elevated p-8">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">
+              A question, answered
+            </p>
+            <h3 className="mt-4 text-xl font-medium leading-snug text-paper">
+              {question.question_text}
+            </h3>
             {question.answer_body && (
-              <p className="mx-auto mt-4 line-clamp-3 max-w-xl text-base leading-relaxed text-paper-muted">
+              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-paper-muted">
                 {question.answer_body}
               </p>
             )}
             <Link
               href={`/questions/${question.slug}`}
-              className="mt-6 inline-block text-sm font-medium text-gold underline-offset-4 hover:underline"
+              className="mt-5 inline-block text-sm font-medium text-gold underline-offset-4 hover:underline"
             >
               Read the full answer →
             </Link>
-          </>
-        ) : (
-          <>
-            <h2 className="mt-5 text-2xl font-medium text-paper sm:text-3xl">Reader questions, answered</h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-paper-muted">
-              Published questions and answers will appear here. Have one of your own?
-            </p>
-          </>
+          </div>
         )}
-        <div className="mt-6">
-          <Link
-            href="/questions"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-gold/30 px-6 py-3 text-xs font-semibold uppercase tracking-widest text-gold transition-colors hover:border-gold/60"
-          >
-            Ask a question
-          </Link>
-        </div>
       </div>
     </section>
   );
