@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createUploadSlot, UploadError } from "@/lib/resources/storage";
+import { newUploadRequestId, logUploadStage, errorClass } from "@/lib/resources/upload-log";
 
 /**
  * Mints a short-lived, single-use Supabase Storage signed upload URL so
@@ -16,10 +17,13 @@ import { createUploadSlot, UploadError } from "@/lib/resources/storage";
  * direct multipart upload there.
  */
 export async function POST(req: Request) {
+  const requestId = newUploadRequestId();
   if (!(await requireAdminApi())) {
+    logUploadStage({ stage: "sign:auth", requestId, status: 401 });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!isSupabaseConfigured()) {
+    logUploadStage({ stage: "sign:not-supabase-mode", requestId, status: 400 });
     return NextResponse.json({ error: "Direct upload is only available in Supabase mode." }, { status: 400 });
   }
 
@@ -36,8 +40,10 @@ export async function POST(req: Request) {
 
   try {
     const slot = await createUploadSlot(kind, contentType, size);
+    logUploadStage({ stage: "sign:ok", requestId, status: 200, kind });
     return NextResponse.json({ success: true, ...slot });
   } catch (error) {
+    logUploadStage({ stage: "sign:failed", requestId, status: 400, kind, errorClass: errorClass(error) });
     const message = error instanceof UploadError ? error.message : "Could not prepare the upload.";
     return NextResponse.json({ error: message }, { status: 400 });
   }

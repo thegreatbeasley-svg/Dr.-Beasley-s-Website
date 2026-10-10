@@ -12,12 +12,14 @@ import {
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { RESOURCE_TYPES } from "@/lib/resources/types";
 import { clean } from "@/lib/validation";
+import { newUploadRequestId, logUploadStage, errorClass } from "@/lib/resources/upload-log";
 
 export async function POST(req: Request) {
   if (!(await requireAdminApi())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const requestId = newUploadRequestId();
   const formData = await req.formData();
 
   const title = clean(formData.get("title"), 200);
@@ -64,6 +66,14 @@ export async function POST(req: Request) {
     // re-verified here against the object Supabase actually stored.
     const filePath = clean(formData.get("file_path"), 200);
     if (!filePath) {
+      // A multipart "file" arriving here means the form ran in server
+      // upload mode against a Supabase backend (directUpload was false).
+      logUploadStage({
+        stage: formData.get("file") ? "finalize:mode-mismatch" : "finalize:no-file-path",
+        requestId,
+        status: 400,
+        mode: "direct",
+      });
       return NextResponse.json(
         { error: "Invalid submission", fieldErrors: { file: "A PDF file is required." } },
         { status: 400 }
@@ -73,7 +83,9 @@ export async function POST(req: Request) {
       const verified = await verifyUploadedObject("resource-pdf", filePath);
       fileName = filePath;
       fileSize = verified.size;
+      logUploadStage({ stage: "finalize:verified", requestId, kind: "resource-pdf", mode: "direct" });
     } catch (error) {
+      logUploadStage({ stage: "finalize:verify-failed", requestId, status: 400, kind: "resource-pdf", errorClass: errorClass(error) });
       const message = error instanceof UploadError ? error.message : "Could not verify the uploaded file.";
       return NextResponse.json({ error: "Invalid submission", fieldErrors: { file: message } }, { status: 400 });
     }
@@ -126,8 +138,10 @@ export async function POST(req: Request) {
       published,
       featured,
     });
+    logUploadStage({ stage: "finalize:created", requestId, status: 200, mode: supabaseMode ? "direct" : "server" });
     return NextResponse.json({ success: true, resource });
   } catch (error) {
+    logUploadStage({ stage: "finalize:create-failed", requestId, status: 500, errorClass: errorClass(error) });
     // The row was never created — remove only the objects uploaded for
     // THIS attempt so a failed finalization never leaves an orphan.
     if (supabaseMode) {
