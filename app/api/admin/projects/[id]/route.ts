@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { handleDelete } from "@/lib/admin/delete";
 import { requireAdminApi } from "@/lib/admin/session";
 import { getProjectById, isProjectSlugTaken, updateProject } from "@/lib/projects/queries";
 import { slugify } from "@/lib/slug";
@@ -74,4 +75,9 @@ export async function PUT(req: Request, { params }: Context) {
   });
 
   return NextResponse.json({ success: true, project });
+}
+
+export async function DELETE(req: Request, { params }: Context) {
+  const { id } = await params;
+  return handleDelete(req, "projects", id);
 }

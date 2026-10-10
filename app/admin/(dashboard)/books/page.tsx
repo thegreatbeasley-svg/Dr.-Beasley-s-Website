@@ -1,11 +1,16 @@
 import Link from "next/link";
+import DeletedBanner from "@/app/components/admin/DeletedBanner";
 import { listAllBooksAdmin } from "@/lib/books/queries";
 import { getBookStatusLabel } from "@/lib/books/cover";
 import AdminPublishTable from "@/app/components/admin/AdminPublishTable";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminBooksPage() {
+export default async function AdminBooksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string | string[] }>;
+}) {
   const books = await listAllBooksAdmin();
   const items = books.map((b) => ({
     id: b.id,
@@ -18,6 +23,7 @@ export default async function AdminBooksPage() {
 
   return (
     <div>
+      <DeletedBanner searchParams={searchParams} />
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-medium text-paper">Books &amp; Body of Work</h1>

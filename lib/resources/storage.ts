@@ -235,38 +235,43 @@ export async function saveCoverImage(file: File): Promise<{ path: string }> {
   return { path: `${COVER_PUBLIC_PREFIX}/${fileName}` };
 }
 
-export async function deleteResourceFile(fileName: string) {
+/** Returns false (never throws) if the object could not be removed. */
+export async function deleteResourceFile(fileName: string): Promise<boolean> {
   if (isSupabaseConfigured()) {
-    await createSupabaseAdminClient().storage.from("resource-files").remove([fileName]);
-    return;
+    const { error } = await createSupabaseAdminClient().storage.from("resource-files").remove([fileName]);
+    return !error;
   }
   try {
     await fs.unlink(path.join(RESOURCE_FILES_DIR, fileName));
-  } catch {
-    // Best-effort cleanup; a missing file is not a failure for the caller.
+    return true;
+  } catch (error) {
+    // Best-effort cleanup; a file that is already gone is not a failure.
+    return (error as NodeJS.ErrnoException).code === "ENOENT";
   }
 }
 
-export async function deleteCoverImage(coverPath: string | null) {
+/** Returns false (never throws) if a cover we own could not be removed. */
+export async function deleteCoverImage(coverPath: string | null): Promise<boolean> {
   if (isSupabaseConfigured()) {
-    if (!coverPath) return;
+    if (!coverPath) return true;
     const marker = "/cover-images/";
     const markerIndex = coverPath.indexOf(marker);
-    if (markerIndex === -1) return;
+    if (markerIndex === -1) return true; // not an object we own
     const objectPath = coverPath.slice(markerIndex + marker.length);
-    if (!objectPath || objectPath.includes("..")) return;
-    await createSupabaseAdminClient().storage.from("cover-images").remove([objectPath]);
-    return;
+    if (!objectPath || objectPath.includes("..")) return true;
+    const { error } = await createSupabaseAdminClient().storage.from("cover-images").remove([objectPath]);
+    return !error;
   }
-  if (!coverPath || !coverPath.startsWith(COVER_PUBLIC_PREFIX)) return;
+  if (!coverPath || !coverPath.startsWith(COVER_PUBLIC_PREFIX)) return true;
   const fileName = coverPath.slice(COVER_PUBLIC_PREFIX.length + 1);
   // Guard against a stray ".." even though these paths are always
   // server-generated — belt and suspenders for a function that deletes.
-  if (fileName.includes("..") || fileName.includes("/")) return;
+  if (fileName.includes("..") || fileName.includes("/")) return true;
   try {
     await fs.unlink(path.join(COVER_UPLOADS_DIR, fileName));
-  } catch {
-    // Best-effort cleanup.
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "ENOENT";
   }
 }
 

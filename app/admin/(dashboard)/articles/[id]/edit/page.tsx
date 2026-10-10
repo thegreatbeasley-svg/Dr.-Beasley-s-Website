@@ -1,3 +1,4 @@
+import DangerZone from "@/app/components/admin/DangerZone";
 import { notFound } from "next/navigation";
 import { getArticleById } from "@/lib/articles/queries";
 import ArticleForm from "@/app/components/admin/ArticleForm";
@@ -18,6 +19,13 @@ export default async function EditArticlePage({
       <div className="mt-8">
         <ArticleForm mode="edit" articleId={article.id} initial={article} />
       </div>
+      <DangerZone
+        apiPath={`/api/admin/articles/${article.id}`}
+        listPath="/admin/articles"
+        itemLabel="article"
+        itemName={article.title}
+        consequence="Its cover image is removed from storage too."
+      />
     </div>
   );
 }

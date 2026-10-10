@@ -1,3 +1,4 @@
+import DangerZone from "@/app/components/admin/DangerZone";
 import { notFound } from "next/navigation";
 import { getResourceById } from "@/lib/resources/queries";
 import ResourceForm from "@/app/components/admin/ResourceForm";
@@ -24,6 +25,13 @@ export default async function EditResourcePage({
           directUpload={isSupabaseConfigured()}
         />
       </div>
+      <DangerZone
+        apiPath={`/api/admin/resources/${resource.id}`}
+        listPath="/admin/resources"
+        itemLabel="resource"
+        itemName={resource.title}
+        consequence="Its PDF and cover image are removed from storage too."
+      />
     </div>
   );
 }

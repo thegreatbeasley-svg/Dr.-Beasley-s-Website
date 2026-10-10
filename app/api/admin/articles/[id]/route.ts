@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { handleDelete } from "@/lib/admin/delete";
 import { requireAdminApi } from "@/lib/admin/session";
 import {
   getArticleById,
@@ -105,4 +106,9 @@ export async function PUT(req: Request, { params }: Context) {
   }
 
   return NextResponse.json({ success: true, article: await getArticleById(id) });
+}
+
+export async function DELETE(req: Request, { params }: Context) {
+  const { id } = await params;
+  return handleDelete(req, "articles", id);
 }

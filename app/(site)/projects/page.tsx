@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listPublishedProjects } from "@/lib/projects/queries";
+import ComingSoon from "@/app/components/ui/ComingSoon";
 import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -25,9 +26,12 @@ export default async function ProjectsPage() {
       </div>
 
       {projects.length === 0 ? (
-        <p className="mt-16 text-center text-paper-muted">
-          Nothing is published here yet. Check back soon.
-        </p>
+        <ComingSoon
+          title="Projects"
+          message="New ventures shaped around wellbeing, purposeful ageing and a life well lived will be introduced here."
+          ctaHref="/knowledge"
+          ctaLabel="Visit the Knowledge Hub"
+        />
       ) : (
         <ul className="mt-12 space-y-4">
           {projects.map((project) => (

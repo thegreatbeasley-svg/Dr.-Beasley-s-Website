@@ -1,11 +1,16 @@
 import Link from "next/link";
+import DeletedBanner from "@/app/components/admin/DeletedBanner";
 import { listAllArticlesAdmin } from "@/lib/articles/queries";
 import { ARTICLE_CONTENT_TYPE_LABELS } from "@/lib/articles/types";
 import AdminPublishTable from "@/app/components/admin/AdminPublishTable";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminArticlesPage() {
+export default async function AdminArticlesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string | string[] }>;
+}) {
   const articles = await listAllArticlesAdmin();
   const items = articles.map((a) => ({
     id: a.id,
@@ -20,6 +25,7 @@ export default async function AdminArticlesPage() {
 
   return (
     <div>
+      <DeletedBanner searchParams={searchParams} />
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-medium text-paper">Articles</h1>

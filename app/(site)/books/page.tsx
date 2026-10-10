@@ -1,6 +1,7 @@
 import { listPublishedBooks } from "@/lib/books/queries";
 import { getBookCoverUrl, getBookStatusLabel } from "@/lib/books/cover";
 import ContentCard from "@/app/components/ui/ContentCard";
+import ComingSoon from "@/app/components/ui/ComingSoon";
 import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -26,9 +27,12 @@ export default async function BooksPage() {
       </div>
 
       {books.length === 0 ? (
-        <p className="mt-16 text-center text-paper-muted">
-          Nothing is published here yet. Check back soon.
-        </p>
+        <ComingSoon
+          title="Books & Body of Work"
+          message="A growing collection of books, essays and enduring ideas is being prepared. Please return soon."
+          ctaHref="/knowledge"
+          ctaLabel="Visit the Knowledge Hub"
+        />
       ) : (
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {books.map((book) => (
