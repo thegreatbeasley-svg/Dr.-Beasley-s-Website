@@ -21,7 +21,7 @@ export default function BodyOfWorkHighlights({ books }: { books: Book[] }) {
           </Link>
         </div>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-paper-muted">
-          Explore the books, frameworks and longer-form work through which Dr. Beasly&rsquo;s
+          Explore the books, frameworks and longer-form work through which Dr. Beasley&rsquo;s
           thinking continues to take shape.
         </p>
 

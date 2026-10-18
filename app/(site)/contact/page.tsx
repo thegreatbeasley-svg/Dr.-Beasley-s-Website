@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Contact — Dr. Virgil Beasly",
+  title: "Contact — Dr. Virgil Beasley",
   description: "Get in touch about speaking, collaboration, media, or a general enquiry.",
   path: "/contact",
 });
@@ -16,7 +16,7 @@ export default function ContactPage() {
       <div className="text-center">
         <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">Get in touch</p>
         <h1 className="mt-5 text-3xl font-medium text-paper sm:text-4xl">
-          Work with Dr. Virgil Beasly
+          Work with Dr. Virgil Beasley
         </h1>
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-paper-muted">
           Speaking, collaboration, media, or a general question — use the form below.

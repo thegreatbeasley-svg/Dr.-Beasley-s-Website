@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Privacy — Dr. Virgil Beasly",
+  title: "Privacy — Dr. Virgil Beasley",
   description: "Draft privacy policy structure — not yet final.",
   path: "/privacy",
   index: false,

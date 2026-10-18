@@ -6,7 +6,7 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Questions & Answers — Dr. Virgil Beasly",
+  title: "Questions & Answers — Dr. Virgil Beasley",
   description: "Reader-submitted questions, answered and published here over time.",
   path: "/questions",
 });

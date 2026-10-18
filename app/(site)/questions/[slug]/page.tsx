@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return buildMetadata({ title: "Not found", description: "", path: `/questions/${slug}`, index: false });
   }
   return buildMetadata({
-    title: `${question.question_text} — Dr. Virgil Beasly`,
+    title: `${question.question_text} — Dr. Virgil Beasley`,
     description: question.answer_body?.slice(0, 160) ?? question.question_text,
     path: `/questions/${question.slug}`,
   });

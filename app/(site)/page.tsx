@@ -1,27 +1,23 @@
 import Hero from "@/app/components/Hero";
 import Manifesto from "@/app/components/home/Manifesto";
-import ThePathways from "@/app/components/home/ThePathways";
 import FeaturedKnowledge, { type FeaturedKnowledgeItem } from "@/app/components/home/FeaturedKnowledge";
+import PersonalSupport from "@/app/components/home/PersonalSupport";
 import FeaturedQuestion from "@/app/components/home/FeaturedQuestion";
-import BodyOfWorkHighlights from "@/app/components/home/BodyOfWorkHighlights";
-import RelatedProjects from "@/app/components/home/RelatedProjects";
 import FinalCta from "@/app/components/home/FinalCta";
 import { listPublishedResources } from "@/lib/resources/queries";
 import { getResourceCoverUrl } from "@/lib/resources/cover";
 import { listPublishedArticles } from "@/lib/articles/queries";
 import { getArticleCoverUrl } from "@/lib/articles/cover";
 import { ARTICLE_CONTENT_TYPE_LABELS } from "@/lib/articles/types";
-import { listPublishedBooks } from "@/lib/books/queries";
 import { listPublishedQuestions } from "@/lib/questions/queries";
-import { listPublishedProjects } from "@/lib/projects/queries";
 import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Dr. Virgil Beasly | Architect of a Life Well Lived",
+  title: "Dr. Virgil Beasley | Architect of a Life Well Lived",
   description:
-    "Explore the work of Dr. Virgil Beasly—clinical psychologist, entrepreneur and cultivator of human possibility—across intimacy, wellbeing and purposeful living.",
+    "Explore the work of Dr. Virgil Beasley—clinical psychologist, entrepreneur and cultivator of human possibility—across intimacy, wellbeing and purposeful living.",
   path: "/",
 });
 
@@ -39,7 +35,7 @@ function buildFeaturedKnowledge(
       key: `resource:${r.id}`,
       href: `/resources/${r.slug}`,
       coverUrl: getResourceCoverUrl(r),
-      badge: r.resource_type,
+      badge: "Free Guide",
       title: r.title,
       description: r.short_description,
       cta: "Get the free guide",
@@ -56,7 +52,7 @@ function buildFeaturedKnowledge(
         a.content_type,
       title: a.title,
       description: a.short_description,
-      cta: "Read more",
+      cta: a.content_type === "article" ? "Read article" : "Read more",
       isDemo: a.is_demo_content,
       featured: a.featured,
       created_at: a.created_at,
@@ -79,12 +75,10 @@ function buildFeaturedKnowledge(
 }
 
 export default async function HomePage() {
-  const [resources, articles, books, questions, projects] = await Promise.all([
+  const [resources, articles, questions] = await Promise.all([
     listPublishedResources(),
     listPublishedArticles(),
-    listPublishedBooks(),
     listPublishedQuestions(),
-    listPublishedProjects(),
   ]);
 
   const featuredKnowledge = buildFeaturedKnowledge(resources, articles);
@@ -93,11 +87,9 @@ export default async function HomePage() {
     <>
       <Hero />
       <Manifesto />
-      <ThePathways />
       <FeaturedKnowledge items={featuredKnowledge} />
+      <PersonalSupport />
       <FeaturedQuestion question={questions[0] ?? null} />
-      <BodyOfWorkHighlights books={books.slice(0, 3)} />
-      <RelatedProjects projects={projects.slice(0, 4)} />
       <FinalCta />
     </>
   );

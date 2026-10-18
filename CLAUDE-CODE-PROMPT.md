@@ -1,6 +1,6 @@
 # Claude Code implementation prompt
 
-Build and verify a polished, working LOCAL demo for Dr. Virgil Beasly. Implement the actual application files, not just a plan.
+Build and verify a polished, working LOCAL demo for Dr. Virgil Beasley. Implement the actual application files, not just a plan.
 
 ## Working directory and references
 
@@ -16,16 +16,16 @@ Inspect its resource pages, signup flow, admin UI, authentication, resource stor
 
 ## Project purpose
 
-Create a stylish resource hub for visitors arriving from social media. It will eventually live on a subdomain alongside an existing website. Visitors meet Dr. Virgil Beasly, scroll through free resources, and submit name, city and email to download a resource. The owner manages content and leads through a simple admin area. Paid books with Stripe are a later phase.
+Create a stylish resource hub for visitors arriving from social media. It will eventually live on a subdomain alongside an existing website. Visitors meet Dr. Virgil Beasley, scroll through free resources, and submit name, city and email to download a resource. The owner manages content and leads through a simple admin area. Paid books with Stripe are a later phase.
 
-Always spell the public name Dr. Virgil Beasly. The folder spelling is not the public brand.
+Always spell the public name Dr. Virgil Beasley. The folder spelling is not the public brand.
 
 ## Approved direction and draft copy
 
 Read WEBSITE-COPY.md in this directory and use its proposed introduction and interface copy. It is a draft for review, not a verified biography. Do not invent credentials, clinical specialties, personal history, testimonials, authorship or treatment claims. Keep all copy centrally editable.
 
 Hero introduction:
-“Welcome to Dr. Virgil Beasly’s resource library. Explore a growing collection of guides, books, and practical resources, gathered in one place for you to discover at your own pace.”
+“Welcome to Dr. Virgil Beasley’s resource library. Explore a growing collection of guides, books, and practical resources, gathered in one place for you to discover at your own pace.”
 
 About introduction:
 “I’m glad you’re here. This space brings together resources for you to read, reflect on, and return to. Browse the collection below, choose something that interests you, and take your next step with a resource you can keep.”
@@ -46,7 +46,7 @@ Footer: brand and clearly identified demo information. Do not invent contact det
 
 Create landing page, resource detail page or accessible modal, and required name/city/email form with validation. Include a separate unchecked optional updates checkbox. Save the lead, consent choice and resource request before returning a working local download. Do not send real emails. Clearly explain the demo’s local-only storage and lack of email delivery.
 
-Create a few useful sample downloadable PDFs explicitly marked demonstration content, with sample covers. Do not imply they are authored by Dr. Beasly. Free guides, worksheets and books are initial resource types. Interactive surveys and paid checkout are future capabilities, not fake working buttons.
+Create a few useful sample downloadable PDFs explicitly marked demonstration content, with sample covers. Do not imply they are authored by Dr. Beasley. Free guides, worksheets and books are initial resource types. Interactive surveys and paid checkout are future capabilities, not fake working buttons.
 
 Serve downloadable files through a controlled server route after a successful request; do not place gated uploads in a public folder. Check publication state when handling requests. Use opaque request identifiers. Do not claim this demo prevents link sharing.
 

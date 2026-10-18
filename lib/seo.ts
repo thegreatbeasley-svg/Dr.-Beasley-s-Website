@@ -9,7 +9,7 @@
  */
 import type { Metadata } from "next";
 
-export const SITE_NAME = "Dr. Virgil Beasly";
+export const SITE_NAME = "Dr. Virgil Beasley";
 
 /**
  * NEXT_PUBLIC_SITE_URL is the explicit, intentional value (set for

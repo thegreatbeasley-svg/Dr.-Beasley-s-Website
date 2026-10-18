@@ -26,7 +26,7 @@ export default function SiteHeader({ isLocalDemo = false }: { isLocalDemo?: bool
     <header className="sticky top-0 z-40 border-b border-white/10 bg-ink/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-sm font-semibold tracking-wide text-paper">
-          Dr. Virgil Beasly
+          Dr. Virgil Beasley
           {isLocalDemo && (
             <span className="ml-2 hidden text-xs font-normal uppercase tracking-widest text-paper-muted sm:inline">
               Local demo

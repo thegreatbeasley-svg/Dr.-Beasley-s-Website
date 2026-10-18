@@ -7,8 +7,8 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Books & Body of Work — Dr. Virgil Beasly",
-  description: "Books, frameworks, research, and programmes from Dr. Virgil Beasly.",
+  title: "Books & Body of Work — Dr. Virgil Beasley",
+  description: "Books, frameworks, research, and programmes from Dr. Virgil Beasley.",
   path: "/books",
 });
 

@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     });
   }
   return buildMetadata({
-    title: `${article.title} — Dr. Virgil Beasly`,
+    title: `${article.title} — Dr. Virgil Beasley`,
     description: article.short_description,
     path: `/knowledge/${article.slug}`,
   });

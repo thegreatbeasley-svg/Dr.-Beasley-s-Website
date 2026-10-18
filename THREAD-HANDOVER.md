@@ -1,8 +1,8 @@
-# Dr. Virgil Beasly — handover, 6 October 2026 (site-architecture expansion)
+# Dr. Virgil Beasley — handover, 6 October 2026 (site-architecture expansion)
 
 ## Current objective
 
-The local resource-hub demo was evolved into the architectural foundation for Dr. Beasly's full
+The local resource-hub demo was evolved into the architectural foundation for Dr. Beasley's full
 brand/authority site, per an explicit brief: Home, About, Knowledge Hub, Questions & Answers,
 Books & Body of Work, Projects, Contact, Privacy — all with a matching admin area. This was a
 large, staged build (6 stages, each verified and committed locally) in one session. Nothing has
@@ -13,7 +13,7 @@ See README.md for the full site map, admin section list, and what's still draft.
 
 /Users/martin/Documents/S-SENS Mentor/Clients/Dr. Beasley/Website/Landing Page
 
-Correct public name: **Dr. Virgil Beasly**. Do not infer spelling from directory names.
+Correct public name: **Dr. Virgil Beasley**. Do not infer spelling from directory names.
 
 ## What changed this session
 
@@ -76,7 +76,7 @@ the demo" for the one, deliberate way to do that.
 ## Content and assets
 
 WEBSITE-COPY.md contains proposed introductory copy, not a verified biography — still used as-is
-on Home/About's brief intro. Sample resources/articles are demonstration content, not Dr. Beasly's
+on Home/About's brief intro. Sample resources/articles are demonstration content, not Dr. Beasley's
 authored materials. About, Privacy, Books, and Questions all currently show draft/placeholder
 structure rather than invented content — see README.md's "What remains draft" for the full list.
 
@@ -92,9 +92,9 @@ extended consistently to every new page built this session.
 ## Known gaps / open items for next session
 
 - **Books section has zero entries.** The admin tooling works; no titles exist to seed without
-  inventing them. Needs real body-of-work entries from Dr. Beasly (or explicit instruction to seed
+  inventing them. Needs real body-of-work entries from Dr. Beasley (or explicit instruction to seed
   further demo placeholders).
-- **Projects are unpublished.** Confirm the actual relationship between Dr. Beasly and Continuum
+- **Projects are unpublished.** Confirm the actual relationship between Dr. Beasley and Continuum
   Wellness/Continuum Lifestyle before publishing those two entries or editing their relationship
   note away from the draft placeholder.
 - **About/Privacy are still structural placeholders** — need approved biographical and legal copy.

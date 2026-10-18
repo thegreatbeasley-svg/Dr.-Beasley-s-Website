@@ -17,7 +17,7 @@ export async function generateMetadata({
   if (!resource) return buildMetadata({ title: "Resource not found", description: "", path: `/resources/${slug}`, index: false });
 
   return buildMetadata({
-    title: `${resource.title} — Dr. Virgil Beasly`,
+    title: `${resource.title} — Dr. Virgil Beasley`,
     description: resource.short_description,
     path: `/resources/${resource.slug}`,
   });

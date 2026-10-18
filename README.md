@@ -1,6 +1,6 @@
-# Dr. Virgil Beasly — Site Architecture (Local Demo)
+# Dr. Virgil Beasley — Site Architecture (Local Demo)
 
-A working local demo of the architectural foundation for Dr. Virgil Beasly's brand and authority
+A working local demo of the architectural foundation for Dr. Virgil Beasley's brand and authority
 site: a resource library, a knowledge hub, reader Q&A, books/body-of-work, related projects, and
 contact — all backed by a local SQLite database with a simple admin area to manage every section.
 Everything runs on this computer only — there is no live deployment, external database, or
@@ -66,7 +66,7 @@ account system, no rate limiting, no HTTPS. See "Production work remaining" belo
 | `/questions/[slug]` | An individual published question + answer |
 | `/books` | Books, frameworks, research, programmes — info and a call to action only, no purchasing yet |
 | `/books/[slug]` | An individual book/body-of-work entry |
-| `/projects` | Related initiatives, each with Dr. Beasly's relationship to it stated explicitly |
+| `/projects` | Related initiatives, each with Dr. Beasley's relationship to it stated explicitly |
 | `/projects/[slug]` | An individual project |
 | `/contact` | Speaking / collaboration / media / general enquiry form — no invented contact details |
 | `/privacy` | Draft-labeled placeholder privacy structure, not a reviewed policy, excluded from the sitemap/indexing |
@@ -106,7 +106,7 @@ directly.
 
 Sample resources/articles are placeholder content generated at seed time and are clearly marked as
 demonstration content in the UI (and, for PDFs, inside the file itself). They are not authored by,
-or attributed to, Dr. Virgil Beasly.
+or attributed to, Dr. Virgil Beasley.
 
 ## What's seeded on first run
 
@@ -192,7 +192,7 @@ and a full screen-reader pass (only headless-browser accessibility-tree checks w
 
 - **About** page sections (biography, credentials, philosophy, personal) are structural
   placeholders only.
-- **Projects**: the two seeded entries are unpublished; their relationship to Dr. Beasly is an
+- **Projects**: the two seeded entries are unpublished; their relationship to Dr. Beasley is an
   explicit draft placeholder, not a description.
 - **Privacy** page is a draft structure, not a reviewed legal document, and is excluded from the
   sitemap/indexing.

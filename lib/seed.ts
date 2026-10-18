@@ -49,7 +49,7 @@ async function buildSamplePdf(title: string, bodyLines: string[]): Promise<Uint8
   );
   y -= 16;
   page.drawText(
-    "It is not authored by, or attributed to, Dr. Virgil Beasly.",
+    "It is not authored by, or attributed to, Dr. Virgil Beasley.",
     { x: margin, y, size: 10, font, color: rgb(0.45, 0.45, 0.45) }
   );
 
@@ -217,7 +217,7 @@ export async function seedDatabaseIfEmpty() {
   }
 
   // Draft-only, unpublished: the brief names these two as possible initial
-  // entries, but Dr. Beasly's relationship to each is explicitly unconfirmed
+  // entries, but Dr. Beasley's relationship to each is explicitly unconfirmed
   // (DEFAULT_RELATIONSHIP_NOTE), so they're seeded hidden — an admin must
   // review and publish deliberately, same as any other draft content here.
   const projectCount = (

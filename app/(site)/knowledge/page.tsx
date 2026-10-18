@@ -9,9 +9,9 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Knowledge Hub — Dr. Virgil Beasly",
+  title: "Knowledge Hub — Dr. Virgil Beasley",
   description:
-    "Guides, worksheets, books, and articles from Dr. Virgil Beasly's resource library, in one browsable, filterable hub.",
+    "Guides, worksheets, books, and articles from Dr. Virgil Beasley's resource library, in one browsable, filterable hub.",
   path: "/knowledge",
 });
 
@@ -51,7 +51,7 @@ export default async function KnowledgeHubPage() {
           Guides, articles, and resources
         </h1>
         <p className="mt-4 text-base leading-relaxed text-paper-muted">
-          Everything Dr. Virgil Beasly has gathered in one place — browse by type below, or use the
+          Everything Dr. Virgil Beasley has gathered in one place — browse by type below, or use the
           filters to find what you need.
         </p>
       </div>

@@ -2,7 +2,7 @@ export default function Footer({ isLocalDemo = false }: { isLocalDemo?: boolean 
   return (
     <footer className="mt-auto border-t border-white/10 bg-ink">
       <div className="mx-auto max-w-6xl px-6 py-12 text-sm text-paper-muted">
-        <p className="text-base font-medium text-paper">Dr. Virgil Beasly</p>
+        <p className="text-base font-medium text-paper">Dr. Virgil Beasley</p>
         <p className="mt-1">Architect of a Life Well Lived</p>
 
         {isLocalDemo && (
@@ -16,15 +16,15 @@ export default function Footer({ isLocalDemo = false }: { isLocalDemo?: boolean 
             </p>
             <p className="mt-2">
               Sample downloads are placeholder files clearly marked as demonstration content and are
-              not authored by Dr. Virgil Beasly.
+              not authored by Dr. Virgil Beasley.
             </p>
           </div>
         )}
 
         <p className="mt-8 text-xs text-paper-muted/70">
           {isLocalDemo
-            ? `© ${new Date().getFullYear()} Dr. Virgil Beasly. Demo build — no contact details or legal claims are represented here.`
-            : `© ${new Date().getFullYear()} Dr. Virgil Beasly.`}
+            ? `© ${new Date().getFullYear()} Dr. Virgil Beasley. Demo build — no contact details or legal claims are represented here.`
+            : `© ${new Date().getFullYear()} Dr. Virgil Beasley.`}
         </p>
       </div>
     </footer>

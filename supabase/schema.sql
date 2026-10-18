@@ -1,4 +1,4 @@
--- Dr. Virgil Beasly website production schema.
+-- Dr. Virgil Beasley website production schema.
 -- Additive and safe to run more than once in the Supabase SQL editor.
 
 create extension if not exists pgcrypto;

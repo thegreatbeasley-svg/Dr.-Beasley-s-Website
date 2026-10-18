@@ -6,8 +6,8 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Projects — Dr. Virgil Beasly",
-  description: "Related initiatives connected to Dr. Virgil Beasly.",
+  title: "Projects — Dr. Virgil Beasley",
+  description: "Related initiatives connected to Dr. Virgil Beasley.",
   path: "/projects",
 });
 
@@ -20,7 +20,7 @@ export default async function ProjectsPage() {
         <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">Projects</p>
         <h1 className="mt-5 text-3xl font-medium text-paper sm:text-4xl">Related initiatives</h1>
         <p className="mt-4 text-base leading-relaxed text-paper-muted">
-          A few related projects, with Dr. Virgil Beasly&rsquo;s relationship to each noted
+          A few related projects, with Dr. Virgil Beasley&rsquo;s relationship to each noted
           explicitly.
         </p>
       </div>

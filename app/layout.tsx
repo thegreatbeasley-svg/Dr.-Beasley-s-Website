@@ -13,12 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const isLocalDemo = !isSupabaseConfigured();
   return {
     title: {
-      default: isLocalDemo ? "Dr. Virgil Beasly (Local Demo)" : "Dr. Virgil Beasly",
+      default: isLocalDemo ? "Dr. Virgil Beasley (Local Demo)" : "Dr. Virgil Beasley",
       template: "%s",
     },
     description: isLocalDemo
-      ? "A local, working demo site for Dr. Virgil Beasly."
-      : "Dr. Virgil Beasly — Architect of a Life Well Lived.",
+      ? "A local, working demo site for Dr. Virgil Beasley."
+      : "Dr. Virgil Beasley — Architect of a Life Well Lived.",
     // Belt-and-suspenders: every (site) route sets its own robots
     // directive via buildMetadata(), but this covers anything that
     // doesn't (e.g. /admin) while PRE_LAUNCH_NOINDEX is active.

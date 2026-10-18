@@ -40,7 +40,7 @@ export async function GET(req: Request) {
               color: "#cdc3b2",
             }}
           >
-            Dr. Virgil Beasly
+            Dr. Virgil Beasley
           </div>
           <div
             style={{

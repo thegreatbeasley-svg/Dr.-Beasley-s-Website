@@ -112,7 +112,7 @@ export default function ProjectForm({ mode, projectId, initial }: Props) {
 
       <div>
         <label htmlFor="relationship_note" className={labelClass}>
-          Relationship to Dr. Virgil Beasly
+          Relationship to Dr. Virgil Beasley
         </label>
         <textarea
           id="relationship_note"

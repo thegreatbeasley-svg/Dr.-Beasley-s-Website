@@ -40,7 +40,7 @@ export default function AdminShell({
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">
               {isLocalDemo ? "Local demo admin" : "Admin"}
             </p>
-            <p className="text-sm text-paper-muted">Dr. Virgil Beasly</p>
+            <p className="text-sm text-paper-muted">Dr. Virgil Beasley</p>
           </div>
           <nav className="flex items-center gap-6" aria-label="Admin">
             {NAV_ITEMS.map((item) => (

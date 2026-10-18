@@ -191,7 +191,7 @@ export default function ResourceRequestForm({
           className="mt-1 h-4 w-4 accent-tangerine"
         />
         <span className="text-sm leading-relaxed text-paper-muted">
-          I&rsquo;d also like to receive new resources and updates from Dr. Virgil Beasly.
+          I&rsquo;d also like to receive new resources and updates from Dr. Virgil Beasley.
         </span>
       </label>
 

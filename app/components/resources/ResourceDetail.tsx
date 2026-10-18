@@ -41,7 +41,7 @@ export default function ResourceDetail({ resource, headingId, onFormSuccess, isL
         )}
         {resource.is_demo_content && (
           <p className="mt-3 text-xs font-medium uppercase tracking-wider text-paper-muted/70">
-            Demonstration content — not authored by Dr. Virgil Beasly.
+            Demonstration content — not authored by Dr. Virgil Beasley.
           </p>
         )}
 

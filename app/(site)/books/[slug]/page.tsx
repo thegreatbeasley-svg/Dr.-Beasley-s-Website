@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return buildMetadata({ title: "Not found", description: "", path: `/books/${slug}`, index: false });
   }
   return buildMetadata({
-    title: `${book.title} — Dr. Virgil Beasly`,
+    title: `${book.title} — Dr. Virgil Beasley`,
     description: book.description,
     path: `/books/${book.slug}`,
   });

@@ -1,8 +1,8 @@
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "About — Dr. Virgil Beasly",
-  description: "About Dr. Virgil Beasly — draft structure, pending approved biographical copy.",
+  title: "About — Dr. Virgil Beasley",
+  description: "About Dr. Virgil Beasley — draft structure, pending approved biographical copy.",
   path: "/about",
 });
 
@@ -29,7 +29,7 @@ export default function AboutPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-20 sm:py-24">
       <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">About</p>
-      <h1 className="mt-5 text-3xl font-medium text-paper sm:text-4xl">Welcome. I&rsquo;m Dr. Virgil Beasly.</h1>
+      <h1 className="mt-5 text-3xl font-medium text-paper sm:text-4xl">Welcome. I&rsquo;m Dr. Virgil Beasley.</h1>
       <p className="mt-6 text-lg leading-relaxed text-paper-muted">
         I&rsquo;m glad you&rsquo;re here. This space brings together resources for you to read,
         reflect on, and return to. Browse the collection, choose something that interests you, and

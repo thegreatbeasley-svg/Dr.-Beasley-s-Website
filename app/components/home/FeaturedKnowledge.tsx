@@ -24,14 +24,14 @@ export default function FeaturedKnowledge({ items }: { items: FeaturedKnowledgeI
 
   return (
     <section className="border-b border-white/10 bg-ink-elevated/30">
-      <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
               From the Knowledge Hub
             </p>
             <h2 className="mt-3 text-3xl font-medium text-paper sm:text-4xl">
-              Ideas to carry with you
+              Ideas to Carry With You
             </h2>
           </div>
           <Link href="/knowledge" className="text-sm font-medium text-gold underline-offset-4 hover:underline">
@@ -39,8 +39,9 @@ export default function FeaturedKnowledge({ items }: { items: FeaturedKnowledgeI
           </Link>
         </div>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-paper-muted">
-          Explore selected writing, thoughtful answers and practical resources from Dr.
-          Beasly&rsquo;s growing body of work.
+          Some questions deserve more than quick answers. Explore honest conversations about
+          intimacy, relationships, resilience, aging, and the unexpected possibilities that emerge
+          when life changes.
         </p>
 
         <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-5">
@@ -97,10 +98,13 @@ export default function FeaturedKnowledge({ items }: { items: FeaturedKnowledgeI
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-gold">
                       {item.badge}
                     </span>
-                    <h3 className="mt-1 truncate text-base font-medium text-paper">{item.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-paper-muted">
+                    <h3 className="mt-1 text-base font-medium leading-snug text-paper">{item.title}</h3>
+                    <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-paper-muted">
                       {item.description}
                     </p>
+                    <span className="mt-2 inline-block text-[11px] font-semibold uppercase tracking-widest text-gold group-hover:underline underline-offset-4">
+                      {item.cta} →
+                    </span>
                   </div>
                 </Link>
               ))}
