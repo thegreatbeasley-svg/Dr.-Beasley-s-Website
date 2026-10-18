@@ -20,9 +20,8 @@ export default function FeaturedQuestion({ question }: { question: PublishedQues
             <p>If something is weighing on your mind, ask me.</p>
             <p>
               Your question may be personal, but chances are you&rsquo;re not the only one asking
-              it. Selected questions may be edited to remove identifying details and shared
-              publicly to help others navigating similar experiences. No question is published
-              without review.
+              it. Every question is reviewed privately. Your question will not be published without
+              your explicit permission.
             </p>
           </div>
           <ul className="mx-auto mt-6 max-w-md space-y-2 border-l border-gold/30 pl-4 text-left font-display text-sm italic text-paper-muted/90 md:mx-0">

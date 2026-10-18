@@ -86,12 +86,6 @@ export default function QuestionSubmitForm() {
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <h3 className="text-lg font-medium text-paper">Ask a question</h3>
-      <p className="text-sm text-paper-muted">
-        Submitted questions go into a review queue. They&rsquo;re only published here once an
-        answer has been written — your email is never shown publicly.
-      </p>
-
       <div>
         <label htmlFor={questionId} className="mb-2 block text-sm text-paper-muted">
           Your question
@@ -149,8 +143,14 @@ export default function QuestionSubmitForm() {
         disabled={status === "submitting"}
         className="rounded-full bg-tangerine px-8 py-4 text-sm font-semibold uppercase tracking-widest text-tangerine-ink transition-colors hover:bg-tangerine-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {status === "submitting" ? "Sending…" : "Submit question"}
+        {status === "submitting" ? "Sending…" : "Submit my question"}
       </button>
+
+      <p className="text-xs leading-relaxed text-paper-muted/80">
+        Your name and email address are never displayed publicly, and a personal response is not
+        guaranteed. Please avoid including information that could identify you in the question
+        itself.
+      </p>
     </form>
   );
 }
