@@ -30,11 +30,6 @@ const STEPS = [
   },
 ];
 
-const primaryButton =
-  "inline-flex items-center justify-center rounded-full bg-tangerine px-8 py-4 text-sm font-semibold uppercase tracking-widest text-tangerine-ink transition-colors hover:bg-tangerine-hover";
-const secondaryButton =
-  "inline-flex items-center justify-center rounded-full border border-gold/30 px-8 py-4 text-sm font-semibold uppercase tracking-widest text-gold transition-colors hover:border-gold/60";
-
 export default async function QuestionsPage() {
   const questions = await listPublishedQuestions();
 
@@ -65,14 +60,12 @@ export default async function QuestionsPage() {
             </p>
             <p className="text-paper">Every meaningful conversation begins with a question.</p>
           </div>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-            <a href="#ask" className={primaryButton}>
-              Ask Dr. Beasley
-            </a>
-            <a href="#questions" className={secondaryButton}>
-              Explore the Questions
-            </a>
-          </div>
+          <a
+            href="#ask"
+            className="mt-8 inline-block text-sm font-medium text-gold underline-offset-4 hover:underline"
+          >
+            Ask a Question ↓
+          </a>
         </div>
       </section>
 
@@ -93,17 +86,9 @@ export default async function QuestionsPage() {
             </p>
             <p>
               Dr. Beasley believes that sharing our experiences can help others feel less alone.
-              That&rsquo;s why this space exists.
-            </p>
-            <p>
-              Questions begin privately. Some may lead to existing resources, while others may
-              inspire new conversations and answers.
-            </p>
-            <p>
-              And when someone chooses to share their experience, their question may help another
-              person find clarity, reassurance, or a different way forward. Over time, these
-              contributions can become a growing collection of real questions and thoughtful
-              answers.
+              With their permission, some of these questions and answers may become part of a
+              growing collection of conversations that help others find clarity, reassurance, or a
+              different way forward.
             </p>
           </div>
         </div>
@@ -153,9 +138,6 @@ export default async function QuestionsPage() {
                   This collection is just getting started. Your question could help shape the
                   conversations that follow.
                 </p>
-                <a href="#ask" className={`${primaryButton} mt-6`}>
-                  Ask a Question
-                </a>
               </div>
             ) : (
               <ul className="space-y-4">
