@@ -4,7 +4,7 @@ import { createArticle, isArticleSlugTaken } from "@/lib/articles/queries";
 import { slugify } from "@/lib/slug";
 import { saveCoverImage, UploadError } from "@/lib/resources/storage";
 import { ARTICLE_CONTENT_TYPES } from "@/lib/articles/types";
-import { clean } from "@/lib/validation";
+import { clean, cleanText } from "@/lib/validation";
 
 export async function POST(req: Request) {
   if (!(await requireAdminApi())) {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const title = clean(formData.get("title"), 200);
   const slugInput = clean(formData.get("slug"), 200);
   const shortDescription = clean(formData.get("short_description"), 500);
-  const body = clean(formData.get("body"), 20000);
+  const body = cleanText(formData.get("body"), 20000);
   const topic = clean(formData.get("topic"), 100);
   const contentType = clean(formData.get("content_type"), 40);
   const published = formData.get("published") === "true";

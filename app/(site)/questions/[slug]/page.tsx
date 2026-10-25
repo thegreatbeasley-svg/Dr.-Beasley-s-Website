@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import RichText from "@/app/components/RichText";
 import { getPublishedQuestionBySlug } from "@/lib/questions/queries";
 import { buildMetadata } from "@/lib/seo";
 
@@ -27,8 +28,6 @@ export default async function QuestionDetailPage({
   const question = await getPublishedQuestionBySlug(slug);
   if (!question) notFound();
 
-  const paragraphs = (question.answer_body ?? "").split(/\n{2,}/).filter((p) => p.trim());
-
   // Minimal, factual QAPage structured data — only the submitted question
   // text and the admin-written answer, nothing invented.
   const jsonLd = {
@@ -52,11 +51,7 @@ export default async function QuestionDetailPage({
 
       <h1 className="mt-8 text-2xl font-medium text-paper sm:text-3xl">{question.question_text}</h1>
 
-      <div className="mt-8 space-y-5 text-base leading-relaxed text-paper">
-        {paragraphs.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
+      <RichText text={question.answer_body} variant="article" className="mt-8 text-base text-paper sm:text-lg" />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </article>

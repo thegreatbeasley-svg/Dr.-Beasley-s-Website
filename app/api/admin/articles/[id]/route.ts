@@ -10,7 +10,7 @@ import {
 import { slugify } from "@/lib/slug";
 import { saveCoverImage, UploadError } from "@/lib/resources/storage";
 import { ARTICLE_CONTENT_TYPES } from "@/lib/articles/types";
-import { clean } from "@/lib/validation";
+import { clean, cleanText } from "@/lib/validation";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -56,7 +56,7 @@ export async function PUT(req: Request, { params }: Context) {
   const title = clean(formData.get("title"), 200);
   const slugInput = clean(formData.get("slug"), 200);
   const shortDescription = clean(formData.get("short_description"), 500);
-  const bodyText = clean(formData.get("body"), 20000);
+  const bodyText = cleanText(formData.get("body"), 20000);
   const topic = clean(formData.get("topic"), 100);
   const contentType = clean(formData.get("content_type"), 40);
   const published = formData.get("published") === "true";

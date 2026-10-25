@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { BOOK_KINDS, BOOK_STATUSES, BOOK_STATUS_LABELS } from "@/lib/books/types";
 import type { Book } from "@/lib/books/types";
+import FormattingHint from "./FormattingHint";
 
 type Props = {
   mode: "create" | "edit";
@@ -148,6 +149,7 @@ export default function BookForm({ mode, bookId, initial }: Props) {
           Description
         </label>
         <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} rows={5} maxLength={4000} required />
+        <FormattingHint headings={false} />
         {fieldErrors.description && <p className="mt-1 text-sm text-tangerine-hover">{fieldErrors.description}</p>}
       </div>
 

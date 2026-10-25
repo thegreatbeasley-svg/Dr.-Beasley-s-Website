@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/session";
 import { createProject, isProjectSlugTaken } from "@/lib/projects/queries";
 import { slugify } from "@/lib/slug";
-import { clean } from "@/lib/validation";
+import { clean, cleanText } from "@/lib/validation";
 
 export async function POST(req: Request) {
   if (!(await requireAdminApi())) {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const name = clean(formData.get("name"), 200);
   const slugInput = clean(formData.get("slug"), 200);
   const relationshipNote = clean(formData.get("relationship_note"), 500);
-  const description = clean(formData.get("description"), 2000);
+  const description = cleanText(formData.get("description"), 2000);
   const url = clean(formData.get("url"), 500);
   const published = formData.get("published") === "true";
   const featured = formData.get("featured") === "true";

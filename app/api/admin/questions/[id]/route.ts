@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/session";
 import { getQuestionById, updateQuestionAnswer } from "@/lib/questions/queries";
 import { QUESTION_STATUSES } from "@/lib/questions/types";
-import { clean } from "@/lib/validation";
+import { clean, cleanText } from "@/lib/validation";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -24,7 +24,7 @@ export async function PUT(req: Request, { params }: Context) {
   }
 
   const status = clean(body.status, 20);
-  const answerBody = clean(body.answerBody, 20000);
+  const answerBody = cleanText(body.answerBody, 20000);
 
   if (!QUESTION_STATUSES.includes(status as (typeof QUESTION_STATUSES)[number])) {
     return NextResponse.json(

@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ARTICLE_CONTENT_TYPES, ARTICLE_CONTENT_TYPE_LABELS } from "@/lib/articles/types";
 import type { Article } from "@/lib/articles/types";
+import FormattingHint from "./FormattingHint";
 
 type Props = {
   mode: "create" | "edit";
@@ -173,7 +174,7 @@ export default function ArticleForm({ mode, articleId, initial }: Props) {
 
       <div>
         <label htmlFor="body" className={labelClass}>
-          Body <span className="text-paper-muted/60">(plain text — separate paragraphs with a blank line)</span>
+          Body <span className="text-paper-muted/60">(leave a blank line between paragraphs)</span>
         </label>
         <textarea
           id="body"
@@ -184,7 +185,8 @@ export default function ArticleForm({ mode, articleId, initial }: Props) {
           maxLength={20000}
           required
         />
-        {fieldErrors.body && <p className="mt-1 text-sm text-tangerine-hover">{fieldErrors.body}</p>}
+        <FormattingHint />
+        {fieldErrors.body &&<p className="mt-1 text-sm text-tangerine-hover">{fieldErrors.body}</p>}
       </div>
 
       <div>

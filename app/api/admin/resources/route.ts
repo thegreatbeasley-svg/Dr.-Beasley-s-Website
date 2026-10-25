@@ -11,7 +11,7 @@ import {
 } from "@/lib/resources/storage";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { RESOURCE_TYPES } from "@/lib/resources/types";
-import { clean } from "@/lib/validation";
+import { clean, cleanText } from "@/lib/validation";
 import { newUploadRequestId, logUploadStage, errorClass } from "@/lib/resources/upload-log";
 
 export async function POST(req: Request) {
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const title = clean(formData.get("title"), 200);
   const slugInput = clean(formData.get("slug"), 200);
   const shortDescription = clean(formData.get("short_description"), 500);
-  const longDescription = clean(formData.get("long_description"), 4000);
+  const longDescription = cleanText(formData.get("long_description"), 4000);
   const resourceType = clean(formData.get("resource_type"), 40);
   const published = formData.get("published") === "true";
   const featured = formData.get("featured") === "true";

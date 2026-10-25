@@ -4,7 +4,7 @@ import { createBook, isBookSlugTaken } from "@/lib/books/queries";
 import { slugify } from "@/lib/slug";
 import { saveCoverImage, UploadError } from "@/lib/resources/storage";
 import { BOOK_KINDS, BOOK_STATUSES } from "@/lib/books/types";
-import { clean } from "@/lib/validation";
+import { clean, cleanText } from "@/lib/validation";
 
 export async function POST(req: Request) {
   if (!(await requireAdminApi())) {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const title = clean(formData.get("title"), 200);
   const slugInput = clean(formData.get("slug"), 200);
   const kind = clean(formData.get("kind"), 40);
-  const description = clean(formData.get("description"), 4000);
+  const description = cleanText(formData.get("description"), 4000);
   const status = clean(formData.get("status"), 20);
   const ctaLabel = clean(formData.get("cta_label"), 60);
   const ctaUrl = clean(formData.get("cta_url"), 500);

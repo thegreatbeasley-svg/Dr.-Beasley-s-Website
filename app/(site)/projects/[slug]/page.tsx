@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import RichText from "@/app/components/RichText";
 import { getPublishedProjectBySlug } from "@/lib/projects/queries";
 import { buildMetadata } from "@/lib/seo";
 
@@ -34,9 +35,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         {project.relationship_note}
       </p>
 
-      {project.description && (
-        <p className="mt-6 text-base leading-relaxed text-paper-muted">{project.description}</p>
-      )}
+      <RichText text={project.description} className="mt-6 text-base text-paper-muted" />
 
       {project.url && (
         <div className="mt-8">

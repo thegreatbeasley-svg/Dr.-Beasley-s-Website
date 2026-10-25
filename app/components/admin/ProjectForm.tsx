@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { DEFAULT_RELATIONSHIP_NOTE } from "@/lib/projects/types";
 import type { Project } from "@/lib/projects/types";
+import FormattingHint from "./FormattingHint";
 
 type Props = {
   mode: "create" | "edit";
@@ -133,6 +134,7 @@ export default function ProjectForm({ mode, projectId, initial }: Props) {
           Description <span className="text-paper-muted/60">(optional)</span>
         </label>
         <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} rows={4} maxLength={2000} />
+        <FormattingHint headings={false} />
       </div>
 
       <div>

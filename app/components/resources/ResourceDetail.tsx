@@ -1,5 +1,6 @@
 import type { Resource } from "@/lib/resources/types";
 import { getResourceCoverUrl } from "@/lib/resources/cover";
+import RichText from "@/app/components/RichText";
 import ResourceRequestForm from "./ResourceRequestForm";
 
 type Props = {
@@ -31,9 +32,7 @@ export default function ResourceDetail({ resource, headingId, onFormSuccess, isL
           {resource.title}
         </h2>
         {resource.long_description ? (
-          <p className="mt-4 text-base leading-relaxed text-paper-muted">
-            {resource.long_description}
-          </p>
+          <RichText text={resource.long_description} className="mt-4 text-base text-paper-muted" />
         ) : (
           <p className="mt-4 text-base leading-relaxed text-paper-muted">
             {resource.short_description}

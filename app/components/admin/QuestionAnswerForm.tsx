@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { QUESTION_STATUSES } from "@/lib/questions/types";
 import type { Question } from "@/lib/questions/types";
+import FormattingHint from "./FormattingHint";
 
 const inputClass =
   "w-full rounded-lg border border-white/15 bg-ink px-4 py-3 text-paper focus:border-gold focus:outline-none";
@@ -66,6 +67,7 @@ export default function QuestionAnswerForm({ question }: { question: Question })
           rows={10}
           maxLength={20000}
         />
+        <FormattingHint />
         {fieldErrors.answerBody && (
           <p className="mt-1 text-sm text-tangerine-hover">{fieldErrors.answerBody}</p>
         )}

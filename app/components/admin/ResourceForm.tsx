@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RESOURCE_TYPES } from "@/lib/resources/types";
 import type { Resource } from "@/lib/resources/types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import FormattingHint from "./FormattingHint";
 
 type Props = {
   mode: "create" | "edit";
@@ -281,6 +282,7 @@ export default function ResourceForm({ mode, resourceId, initial, directUpload =
           rows={5}
           maxLength={4000}
         />
+        <FormattingHint headings={false} />
       </div>
 
       <div>

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import RichText from "@/app/components/RichText";
 import { getPublishedBookBySlug } from "@/lib/books/queries";
 import { getBookCoverUrl, getBookStatusLabel } from "@/lib/books/cover";
 import { buildMetadata } from "@/lib/seo";
@@ -43,7 +44,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             {getBookStatusLabel(book.status)}
           </span>
           <h1 className="mt-3 text-2xl font-medium text-paper sm:text-3xl">{book.title}</h1>
-          <p className="mt-4 text-base leading-relaxed text-paper-muted">{book.description}</p>
+          <RichText text={book.description} className="mt-4 text-base text-paper-muted" />
 
           {book.cta_label && (
             <div className="mt-8">

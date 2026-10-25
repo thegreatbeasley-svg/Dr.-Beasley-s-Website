@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import RichText from "@/app/components/RichText";
 import { getPublishedArticleBySlug } from "@/lib/articles/queries";
 import { getArticleCoverUrl } from "@/lib/articles/cover";
 import { ARTICLE_CONTENT_TYPE_LABELS } from "@/lib/articles/types";
@@ -37,7 +38,6 @@ export default async function ArticleDetailPage({
   const label =
     ARTICLE_CONTENT_TYPE_LABELS[article.content_type as keyof typeof ARTICLE_CONTENT_TYPE_LABELS] ??
     article.content_type;
-  const paragraphs = article.body.split(/\n{2,}/).filter((p) => p.trim().length > 0);
 
   // Minimal, factual Article structured data — title/description/dates and
   // the site's own attribution only, no invented credentials.
@@ -76,11 +76,7 @@ export default async function ArticleDetailPage({
         </p>
       )}
 
-      <div className="mt-10 space-y-5 text-base leading-relaxed text-paper">
-        {paragraphs.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
+      <RichText text={article.body} variant="article" className="mt-10 text-base text-paper sm:text-lg" />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </article>
