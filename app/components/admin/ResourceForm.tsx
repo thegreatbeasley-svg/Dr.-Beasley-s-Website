@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { RESOURCE_TYPES } from "@/lib/resources/types";
 import type { Resource } from "@/lib/resources/types";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { readJson, statusHint, uploadDirectly } from "./direct-upload";
 import FormattingHint from "./FormattingHint";
 
 type Props = {
@@ -20,73 +20,6 @@ type Props = {
    */
   directUpload?: boolean;
 };
-
-/**
- * Reads a JSON error body without throwing when the platform (e.g. Vercel's
- * 413/504 pages) answers with HTML or an empty body, and names the HTTP
- * status so a failure is never collapsed into a generic message.
- */
-async function readJson(res: Response): Promise<{
-  error?: string;
-  fieldErrors?: Record<string, string>;
-  token?: string;
-  path?: string;
-  bucket?: string;
-}> {
-  try {
-    return await res.json();
-  } catch {
-    return {};
-  }
-}
-
-function statusHint(status: number) {
-  if (status === 401) return "your admin session has expired — please sign in again";
-  if (status === 413) return "the request was too large for the server";
-  return `HTTP ${status}`;
-}
-
-async function uploadDirectly(
-  kind: "resource-pdf" | "resource-cover",
-  file: File,
-  onProgress: (message: string) => void
-): Promise<string> {
-  onProgress(kind === "resource-pdf" ? "Preparing PDF upload…" : "Preparing cover upload…");
-  let signRes: Response;
-  try {
-    signRes = await fetch("/api/admin/uploads/sign", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, contentType: file.type, size: file.size }),
-    });
-  } catch {
-    throw new Error("Could not reach the server to prepare the upload (network error at the signing step).");
-  }
-  const signData = await readJson(signRes);
-  if (!signRes.ok || !signData.token || !signData.path || !signData.bucket) {
-    throw new Error(
-      signData.error ||
-        `Could not prepare the upload (signing step failed: ${statusHint(signRes.status)}).`
-    );
-  }
-
-  onProgress(kind === "resource-pdf" ? "Uploading PDF…" : "Uploading cover…");
-  let storageError: { message: string } | null;
-  try {
-    ({ error: storageError } = await getSupabaseBrowserClient()
-      .storage.from(signData.bucket)
-      .uploadToSignedUrl(signData.path, signData.token, file));
-  } catch (caught) {
-    throw new Error(
-      `Upload to storage failed (storage step): ${caught instanceof Error ? caught.message : "network error"}`
-    );
-  }
-  if (storageError) {
-    throw new Error(`Upload to storage failed (storage step): ${storageError.message}`);
-  }
-
-  return signData.path as string;
-}
 
 const inputClass =
   "w-full rounded-lg border border-white/15 bg-ink px-4 py-3 text-paper focus:border-gold focus:outline-none";

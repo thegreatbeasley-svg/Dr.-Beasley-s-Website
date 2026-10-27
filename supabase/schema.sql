@@ -51,7 +51,24 @@ create table if not exists public.books (
   cta_label text, cta_url text, cover_image_path text, price_cents integer,
   stripe_price_id text, published boolean not null default false,
   featured boolean not null default false, created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- Books extension (see migrations/20261028000000_books_extension.sql, which upgrades
+  -- an existing database to this same shape): `description` stays the short description.
+  subtitle text, long_description text, publication_year integer,
+  sort_order integer not null default 0,
+  retailers jsonb not null default '[]'::jsonb,
+  cover_width integer, cover_height integer,
+  video_source text, video_url text,
+  constraint books_publication_year_range
+    check (publication_year is null or publication_year between 1000 and 2100),
+  constraint books_retailers_shape
+    check (jsonb_typeof(retailers) = 'array' and jsonb_array_length(retailers) <= 20),
+  constraint books_cover_dimensions
+    check ((cover_width is null) = (cover_height is null)
+       and (cover_width is null or (cover_width > 0 and cover_height > 0))),
+  constraint books_video_consistent
+    check ((video_source is null) = (video_url is null)
+       and (video_source is null or video_source in ('upload', 'youtube', 'vimeo')))
 );
 
 create table if not exists public.projects (
@@ -105,6 +122,13 @@ on conflict (id) do update set public = excluded.public,
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('cover-images', 'cover-images', true, 5242880,
   array['image/png','image/jpeg','image/webp'])
+on conflict (id) do update set public = excluded.public,
+  file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+-- Public bucket for book promo videos (MP4 only, 50 MB per file — the free-plan
+-- per-file ceiling; raise here and in MAX_VIDEO_BYTES on a paid plan).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('book-videos', 'book-videos', true, 52428800, array['video/mp4'])
 on conflict (id) do update set public = excluded.public,
   file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 

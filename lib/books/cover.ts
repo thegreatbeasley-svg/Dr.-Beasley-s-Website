@@ -1,11 +1,31 @@
 import { BOOK_STATUS_LABELS, type BookStatus } from "./types";
 
-/** Reuses the same generated-cover endpoint as resources/articles. */
-export function getBookCoverUrl(book: { cover_image_path: string | null; title: string; kind: string }) {
-  if (book.cover_image_path) return book.cover_image_path;
-  const label = book.kind.charAt(0).toUpperCase() + book.kind.slice(1);
-  const params = new URLSearchParams({ title: book.title, type: label });
-  return `/api/resources/cover?${params.toString()}`;
+export type BookCover = {
+  src: string;
+  /** Null for covers uploaded before dimensions were recorded. */
+  width: number | null;
+  height: number | null;
+  alt: string;
+};
+
+/**
+ * The book's actual uploaded cover, or null. There is deliberately no
+ * generated or placeholder cover for books — without an upload, the public
+ * layout simply omits the image.
+ */
+export function getBookCover(book: {
+  title: string;
+  cover_image_path: string | null;
+  cover_width: number | null;
+  cover_height: number | null;
+}): BookCover | null {
+  if (!book.cover_image_path) return null;
+  return {
+    src: book.cover_image_path,
+    width: book.cover_width,
+    height: book.cover_height,
+    alt: `Cover of ${book.title}, by Dr. Virgil Beasley`,
+  };
 }
 
 export function getBookStatusLabel(status: string) {

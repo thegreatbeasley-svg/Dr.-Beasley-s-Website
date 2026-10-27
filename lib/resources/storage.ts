@@ -2,11 +2,15 @@ import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import sharp from "sharp";
 import {
   RESOURCE_FILES_DIR,
   COVER_UPLOADS_DIR,
   COVER_PUBLIC_PREFIX,
+  VIDEO_UPLOADS_DIR,
+  VIDEO_PUBLIC_PREFIX,
 } from "@/lib/paths";
+import { MAX_VIDEO_BYTES } from "@/lib/books/video";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -37,7 +41,7 @@ export class UploadError extends Error {}
 // kind of file it's about to upload.
 // ============================================================
 
-export type UploadKind = "resource-pdf" | "resource-cover";
+export type UploadKind = "resource-pdf" | "resource-cover" | "book-cover" | "book-video";
 
 type UploadKindConfig = {
   bucket: string;
@@ -55,6 +59,19 @@ const UPLOAD_KINDS: Record<UploadKind, UploadKindConfig> = {
     bucket: "cover-images",
     maxBytes: MAX_COVER_BYTES,
     allowedTypes: ALLOWED_COVER_TYPES,
+  },
+  // Same public bucket and limits as resource covers; a separate kind only
+  // so book covers get the stricter content inspection below.
+  "book-cover": {
+    bucket: "cover-images",
+    maxBytes: MAX_COVER_BYTES,
+    allowedTypes: ALLOWED_COVER_TYPES,
+  },
+  // Promotional MP4s live in their own public bucket (see supabase/migrations).
+  "book-video": {
+    bucket: "book-videos",
+    maxBytes: MAX_VIDEO_BYTES,
+    allowedTypes: { "video/mp4": ".mp4" },
   },
 };
 
@@ -233,6 +250,193 @@ export async function saveCoverImage(file: File): Promise<{ path: string }> {
   // this write target happens to live under it.
   await fs.writeFile(path.join(/* turbopackIgnore: true */ COVER_UPLOADS_DIR, fileName), buffer);
   return { path: `${COVER_PUBLIC_PREFIX}/${fileName}` };
+}
+
+// ============================================================
+// Book cover inspection — checks the real bytes, never the label
+// ============================================================
+
+const MIN_COVER_SIDE = 200;
+const MAX_COVER_SIDE = 8000;
+const MAX_COVER_PIXELS = 64_000_000;
+
+const SNIFFED_TYPES: Record<string, string> = {
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
+export type CoverInspection = { contentType: string; width: number; height: number };
+
+/**
+ * Decodes the image header with sharp (no pixel decode) and returns the
+ * format detected from the file's actual contents plus its display
+ * dimensions (EXIF-rotated sizes are swapped to match how browsers and the
+ * Next image optimizer orient the picture).
+ */
+export async function inspectCoverImage(buffer: Buffer): Promise<CoverInspection> {
+  let meta: Awaited<ReturnType<ReturnType<typeof sharp>["metadata"]>>;
+  try {
+    meta = await sharp(buffer, { limitInputPixels: MAX_COVER_PIXELS }).metadata();
+  } catch {
+    throw new UploadError("That file isn't a valid PNG, JPEG or WebP image.");
+  }
+  const contentType = meta.format ? SNIFFED_TYPES[meta.format] : undefined;
+  if (!contentType) throw new UploadError("Cover images must be PNG, JPEG, or WebP.");
+  if ((meta.pages ?? 1) > 1) throw new UploadError("Animated images can't be used as a cover.");
+
+  let width = meta.width ?? 0;
+  let height = meta.height ?? 0;
+  if (meta.orientation && meta.orientation >= 5) [width, height] = [height, width];
+  if (!width || !height) throw new UploadError("That image has no readable dimensions.");
+  if (Math.min(width, height) < MIN_COVER_SIDE) {
+    throw new UploadError(`The cover is too small — each side must be at least ${MIN_COVER_SIDE}px.`);
+  }
+  if (Math.max(width, height) > MAX_COVER_SIDE) {
+    throw new UploadError(`The cover is too large — each side must be at most ${MAX_COVER_SIDE}px.`);
+  }
+  return { contentType, width, height };
+}
+
+/**
+ * Supabase mode, after the browser's direct upload: re-reads the stored
+ * object, confirms size/type, then inspects its real bytes. Any failure
+ * deletes the just-uploaded object so nothing orphaned is left behind.
+ */
+export async function verifyUploadedCover(
+  objectPath: string
+): Promise<{ publicUrl: string; width: number; height: number }> {
+  const { contentType: storedType } = await verifyUploadedObject("book-cover", objectPath);
+  const supabase = createSupabaseAdminClient();
+  const reject = async (message: string): Promise<never> => {
+    await supabase.storage.from("cover-images").remove([objectPath]);
+    throw new UploadError(message);
+  };
+
+  const { data: signed, error: signError } = await supabase.storage
+    .from("cover-images")
+    .createSignedUrl(objectPath, 60);
+  if (signError || !signed) return reject("Could not verify the uploaded cover.");
+  const res = await fetch(signed.signedUrl);
+  if (!res.ok) return reject("Could not read the uploaded cover to verify it.");
+
+  let inspected: CoverInspection;
+  try {
+    inspected = await inspectCoverImage(Buffer.from(await res.arrayBuffer()));
+  } catch (error) {
+    return reject(error instanceof UploadError ? error.message : "That cover could not be verified.");
+  }
+  if (inspected.contentType !== storedType) {
+    return reject("The file's contents don't match its declared image type.");
+  }
+  return { publicUrl: getUploadedCoverPublicUrl(objectPath), width: inspected.width, height: inspected.height };
+}
+
+/**
+ * Server-side upload path (SQLite mode, and the Supabase fallback when a
+ * file arrives through the API route): inspects the real bytes first, and
+ * requires the declared type to agree with them.
+ */
+export async function saveBookCover(file: File): Promise<{ path: string; width: number; height: number }> {
+  if (!(file instanceof File) || file.size === 0) throw new UploadError("Cover image is empty.");
+  if (file.size > MAX_COVER_BYTES) throw new UploadError("Cover images must be 5MB or smaller.");
+  const inspected = await inspectCoverImage(Buffer.from(await file.arrayBuffer()));
+  if (file.type !== inspected.contentType) {
+    throw new UploadError("The file's contents don't match its declared image type.");
+  }
+  const saved = await saveCoverImage(file);
+  return { path: saved.path, width: inspected.width, height: inspected.height };
+}
+
+// ============================================================
+// Book promo video — MP4 only, real bytes checked
+// ============================================================
+
+/**
+ * True when the bytes start like an ISO base-media (MP4) file: an `ftyp`
+ * box at offset 4. QuickTime (.mov, brand "qt  ") is rejected — it isn't
+ * reliably playable in browsers' <video>.
+ */
+export function looksLikeMp4(head: Buffer): boolean {
+  if (head.length < 12) return false;
+  if (head.subarray(4, 8).toString("latin1") !== "ftyp") return false;
+  return head.subarray(8, 12).toString("latin1") !== "qt  ";
+}
+
+/** Converts a verified book-videos object path into its stored public URL form. */
+export function getUploadedVideoPublicUrl(objectPath: string) {
+  const { data } = createSupabaseAdminClient().storage.from("book-videos").getPublicUrl(objectPath);
+  return data.publicUrl;
+}
+
+/**
+ * Supabase mode, after the browser's direct upload: re-reads the stored
+ * object's size and type, then sniffs its first bytes for an MP4 header.
+ * Any failure deletes the just-uploaded object.
+ */
+export async function verifyUploadedVideo(objectPath: string): Promise<{ publicUrl: string }> {
+  await verifyUploadedObject("book-video", objectPath);
+  const supabase = createSupabaseAdminClient();
+  const reject = async (message: string): Promise<never> => {
+    await supabase.storage.from("book-videos").remove([objectPath]);
+    throw new UploadError(message);
+  };
+  const { data: signed, error } = await supabase.storage.from("book-videos").createSignedUrl(objectPath, 60);
+  if (error || !signed) return reject("Could not verify the uploaded video.");
+  const res = await fetch(signed.signedUrl, { headers: { Range: "bytes=0-31" } });
+  if (!res.ok) return reject("Could not read the uploaded video to verify it.");
+  if (!looksLikeMp4(Buffer.from(await res.arrayBuffer()))) {
+    return reject("That file doesn't look like a valid MP4 video.");
+  }
+  return { publicUrl: getUploadedVideoPublicUrl(objectPath) };
+}
+
+/** Server-side upload path (SQLite demo mode, and a Supabase fallback). */
+export async function saveBookVideo(file: File): Promise<{ path: string }> {
+  if (!(file instanceof File) || file.size === 0) throw new UploadError("The video file is empty.");
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new UploadError(`Videos must be ${Math.round(MAX_VIDEO_BYTES / (1024 * 1024))}MB or smaller.`);
+  }
+  if (file.type !== "video/mp4") throw new UploadError("Only MP4 videos are accepted.");
+  const head = Buffer.from(await file.slice(0, 32).arrayBuffer());
+  if (!looksLikeMp4(head)) throw new UploadError("That file doesn't look like a valid MP4 video.");
+
+  const fileName = safeFileName(".mp4");
+  const buffer = Buffer.from(await file.arrayBuffer());
+  if (isSupabaseConfigured()) {
+    const supabase = createSupabaseAdminClient();
+    const { error } = await supabase.storage
+      .from("book-videos")
+      .upload(fileName, buffer, { contentType: "video/mp4", upsert: false });
+    if (error) throw new UploadError(`Could not store the video: ${error.message}`);
+    return { path: getUploadedVideoPublicUrl(fileName) };
+  }
+  // VIDEO_UPLOADS_DIR is a fixed constant and fileName is our own UUID — not user-controlled.
+  await fs.writeFile(path.join(/* turbopackIgnore: true */ VIDEO_UPLOADS_DIR, fileName), buffer);
+  return { path: `${VIDEO_PUBLIC_PREFIX}/${fileName}` };
+}
+
+/** Returns false (never throws) if a video we own could not be removed. */
+export async function deleteBookVideo(videoPath: string | null): Promise<boolean> {
+  if (!videoPath) return true;
+  if (isSupabaseConfigured()) {
+    const marker = "/book-videos/";
+    const markerIndex = videoPath.indexOf(marker);
+    if (markerIndex === -1) return true; // not an object we own
+    const objectPath = videoPath.slice(markerIndex + marker.length);
+    if (!objectPath || objectPath.includes("..") || objectPath.includes("/")) return true;
+    const { error } = await createSupabaseAdminClient().storage.from("book-videos").remove([objectPath]);
+    return !error;
+  }
+  if (!videoPath.startsWith(VIDEO_PUBLIC_PREFIX + "/")) return true;
+  const fileName = videoPath.slice(VIDEO_PUBLIC_PREFIX.length + 1);
+  if (fileName.includes("..") || fileName.includes("/")) return true;
+  try {
+    await fs.unlink(path.join(VIDEO_UPLOADS_DIR, fileName));
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "ENOENT";
+  }
 }
 
 /** Returns false (never throws) if the object could not be removed. */

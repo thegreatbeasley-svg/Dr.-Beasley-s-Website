@@ -2,7 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { DATA_DIR, DB_PATH, RESOURCE_FILES_DIR, COVER_UPLOADS_DIR } from "@/lib/paths";
+import { DATA_DIR, DB_PATH, RESOURCE_FILES_DIR, COVER_UPLOADS_DIR, VIDEO_UPLOADS_DIR } from "@/lib/paths";
 
 /**
  * A single local SQLite database is the entire persistence layer for this
@@ -157,6 +157,36 @@ function migrate(db: Database.Database) {
   // Any column added to an existing table after its first deploy needs an
   // explicit, additive ALTER TABLE here instead (never a DROP/rewrite).
   ensureColumn(db, "projects", "featured", "INTEGER NOT NULL DEFAULT 0");
+
+  // Books extension — mirrors supabase/migrations/20261028000000_books_extension.sql.
+  // `retailers` holds a JSON array as TEXT. SQLite gets no CHECK constraints;
+  // the same rules are enforced by the application.
+  const booksHadSortOrder = hasColumn(db, "books", "sort_order");
+  ensureColumn(db, "books", "subtitle", "TEXT");
+  ensureColumn(db, "books", "long_description", "TEXT");
+  ensureColumn(db, "books", "publication_year", "INTEGER");
+  ensureColumn(db, "books", "sort_order", "INTEGER NOT NULL DEFAULT 0");
+  ensureColumn(db, "books", "retailers", "TEXT NOT NULL DEFAULT '[]'");
+  ensureColumn(db, "books", "cover_width", "INTEGER");
+  ensureColumn(db, "books", "cover_height", "INTEGER");
+  ensureColumn(db, "books", "video_source", "TEXT");
+  ensureColumn(db, "books", "video_url", "TEXT");
+  if (!booksHadSortOrder) {
+    // Only on the run that adds the column: reproduce today's public order
+    // (featured first, then newest) so existing books don't reshuffle.
+    db.exec(`
+      UPDATE books SET sort_order = (
+        SELECT rn FROM (
+          SELECT id, ROW_NUMBER() OVER (ORDER BY featured DESC, created_at DESC, id) AS rn FROM books
+        ) ranked WHERE ranked.id = books.id
+      )
+    `);
+  }
+}
+
+function hasColumn(db: Database.Database, table: string, column: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  return columns.some((c) => c.name === column);
 }
 
 function ensureColumn(db: Database.Database, table: string, column: string, definition: string) {
@@ -166,7 +196,7 @@ function ensureColumn(db: Database.Database, table: string, column: string, defi
 }
 
 function ensureDirectories() {
-  for (const dir of [DATA_DIR, RESOURCE_FILES_DIR, COVER_UPLOADS_DIR]) {
+  for (const dir of [DATA_DIR, RESOURCE_FILES_DIR, COVER_UPLOADS_DIR, VIDEO_UPLOADS_DIR]) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }

@@ -16,3 +16,8 @@ export const RESOURCE_FILES_DIR = path.join(process.cwd(), "private-storage", "r
 // served from /public/uploads/covers at runtime.
 export const COVER_UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "covers");
 export const COVER_PUBLIC_PREFIX = "/uploads/covers";
+
+// Admin-uploaded book promo videos (local demo only; Supabase mode uses the
+// public `book-videos` bucket). Served from /public/uploads/videos at runtime.
+export const VIDEO_UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "videos");
+export const VIDEO_PUBLIC_PREFIX = "/uploads/videos";

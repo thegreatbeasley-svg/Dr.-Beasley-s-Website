@@ -9,7 +9,13 @@ import { listPublishedProjects } from "@/lib/projects/queries";
 /**
  * Lists only published content — nothing in draft/pending state, and
  * nothing under /admin, ever appears here.
+ *
+ * Rendered on every request (not prerendered at build): a prerendered sitemap
+ * would omit books published after the last deploy and keep listing books
+ * that have since been unpublished.
  */
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "/",

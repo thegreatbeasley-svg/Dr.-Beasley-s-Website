@@ -8,7 +8,7 @@ import { getResourceById } from "@/lib/resources/queries";
 import { getArticleById } from "@/lib/articles/queries";
 import { getBookById } from "@/lib/books/queries";
 import { getProjectById } from "@/lib/projects/queries";
-import { deleteCoverImage, deleteResourceFile } from "@/lib/resources/storage";
+import { deleteBookVideo, deleteCoverImage, deleteResourceFile } from "@/lib/resources/storage";
 
 /**
  * Admin deletion for resources, articles, books and projects.
@@ -135,6 +135,11 @@ export async function deleteContent(
     if (item.cover_image_path && !(await coverIsShared(item.cover_image_path, exclude))) {
       if (!(await deleteCoverImage(item.cover_image_path))) {
         warnings.push("The record was deleted, but its cover image could not be removed from storage.");
+      }
+    }
+    if ("video_url" in item && item.video_source === "upload" && item.video_url) {
+      if (!(await deleteBookVideo(item.video_url))) {
+        warnings.push("The record was deleted, but its video could not be removed from storage.");
       }
     }
     return { title: item.title, warnings };

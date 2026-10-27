@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
 import { handleDelete } from "@/lib/admin/delete";
 import { requireAdminApi } from "@/lib/admin/session";
-import {
-  getBookById,
-  isBookSlugTaken,
-  updateBook,
-  replaceBookCoverImage,
-} from "@/lib/books/queries";
-import { slugify } from "@/lib/slug";
-import { saveCoverImage, UploadError } from "@/lib/resources/storage";
-import { BOOK_KINDS, BOOK_STATUSES } from "@/lib/books/types";
-import { clean, cleanText } from "@/lib/validation";
+import { getBookById, isBookSlugTaken, updateBook } from "@/lib/books/queries";
+import { parseBookForm, resolveBookCover, resolveVideoChange, UploadError, type VideoChange } from "@/lib/books/input";
+import { deleteBookVideo, deleteCoverImage } from "@/lib/resources/storage";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -29,9 +22,8 @@ export async function PATCH(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const patch: { published?: boolean; featured?: boolean } = {};
+  const patch: { published?: boolean } = {};
   if (typeof body.published === "boolean") patch.published = body.published;
-  if (typeof body.featured === "boolean") patch.featured = body.featured;
 
   const book = await updateBook(id, patch);
   return NextResponse.json({ success: true, book });
@@ -46,57 +38,55 @@ export async function PUT(req: Request, { params }: Context) {
   if (!existing) return NextResponse.json({ error: "Book not found" }, { status: 404 });
 
   const formData = await req.formData();
+  const { values, fieldErrors, videoMode, externalVideo } = parseBookForm(formData);
 
-  const title = clean(formData.get("title"), 200);
-  const slugInput = clean(formData.get("slug"), 200);
-  const kind = clean(formData.get("kind"), 40);
-  const description = cleanText(formData.get("description"), 4000);
-  const status = clean(formData.get("status"), 20);
-  const ctaLabel = clean(formData.get("cta_label"), 60);
-  const ctaUrl = clean(formData.get("cta_url"), 500);
-  const published = formData.get("published") === "true";
-  const featured = formData.get("featured") === "true";
-  const cover = formData.get("cover");
-
-  const slug = slugify(slugInput || title);
-
-  const errors: Record<string, string> = {};
-  if (!title) errors.title = "Title is required.";
-  if (!slug) errors.slug = "Slug is required.";
-  if (!description) errors.description = "Description is required.";
-  if (!BOOK_KINDS.includes(kind as (typeof BOOK_KINDS)[number])) errors.kind = "Choose a kind.";
-  if (!BOOK_STATUSES.includes(status as (typeof BOOK_STATUSES)[number])) errors.status = "Choose a status.";
-  if (Object.keys(errors).length > 0) {
-    return NextResponse.json({ error: "Invalid submission", fieldErrors: errors }, { status: 400 });
+  if (Object.keys(fieldErrors).length === 0 && (await isBookSlugTaken(values.slug, id))) {
+    fieldErrors.slug = "That slug is already in use.";
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    return NextResponse.json({ error: "Invalid submission", fieldErrors }, { status: 400 });
   }
 
-  if (await isBookSlugTaken(slug, id)) {
-    return NextResponse.json(
-      { error: "Invalid submission", fieldErrors: { slug: "That slug is already in use." } },
-      { status: 400 }
-    );
+  // Verify any new cover BEFORE touching the record, so a rejected upload
+  // leaves the book (and its current cover) exactly as it was.
+  let cover = null;
+  try {
+    cover = await resolveBookCover(formData);
+  } catch (error) {
+    const message = error instanceof UploadError ? error.message : "Could not save the cover image.";
+    return NextResponse.json({ error: "Invalid submission", fieldErrors: { cover: message } }, { status: 400 });
   }
 
-  await updateBook(id, {
-    title,
-    slug,
-    kind,
-    description,
-    status,
-    cta_label: ctaLabel || null,
-    cta_url: ctaUrl || null,
-    published,
-    featured,
-  });
+  let video: VideoChange;
+  try {
+    video = await resolveVideoChange(formData, videoMode, externalVideo, existing);
+  } catch (error) {
+    if (cover) await deleteCoverImage(cover.path);
+    const message = error instanceof UploadError ? error.message : "Could not save the video.";
+    return NextResponse.json({ error: "Invalid submission", fieldErrors: { video: message } }, { status: 400 });
+  }
 
-  if (cover instanceof File && cover.size > 0) {
-    try {
-      const saved = await saveCoverImage(cover);
-      await replaceBookCoverImage(id, saved.path);
-    } catch (error) {
-      const message = error instanceof UploadError ? error.message : "Could not save the cover image.";
-      return NextResponse.json({ error: "Invalid submission", fieldErrors: { cover: message } }, { status: 400 });
-    }
+  try {
+    await updateBook(id, {
+      ...values,
+      ...(cover
+        ? { cover_image_path: cover.path, cover_width: cover.width, cover_height: cover.height }
+        : {}),
+      ...video.patch,
+    });
+  } catch (error) {
+    if (cover) await deleteCoverImage(cover.path);
+    await deleteBookVideo(video.newUpload);
+    const message = error instanceof Error ? error.message : "Could not save the book.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
+  // Only now that the record points at the new files, remove the old ones.
+  if (cover && existing.cover_image_path && existing.cover_image_path !== cover.path) {
+    await deleteCoverImage(existing.cover_image_path);
+  }
+  if (video.oldUpload && video.oldUpload !== video.patch.video_url) {
+    await deleteBookVideo(video.oldUpload);
   }
 
   return NextResponse.json({ success: true, book: await getBookById(id) });

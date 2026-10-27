@@ -20,6 +20,12 @@ type Props = {
   /** e.g. "/admin/articles" — used for the per-row Edit link and the empty-state CTA. */
   editBase: string;
   emptyLabel: string;
+  /** Books only: POST { ids } here to persist a new display order; adds Order column with up/down. */
+  reorderUrl?: string;
+  /** Books only: show a Preview link per row, e.g. "/admin/books" -> /admin/books/<id>/preview. */
+  previewBase?: string;
+  /** Hide the Featured column for content types where it has no meaning (Books). Default true. */
+  showFeatured?: boolean;
 };
 
 /**
@@ -29,7 +35,15 @@ type Props = {
  * this generalization) — left as-is rather than risk the one flow that's
  * already been fully verified end to end.
  */
-export default function AdminPublishTable({ items, apiBase, editBase, emptyLabel }: Props) {
+export default function AdminPublishTable({
+  items,
+  apiBase,
+  editBase,
+  emptyLabel,
+  reorderUrl,
+  previewBase,
+  showFeatured = true,
+}: Props) {
   const router = useRouter();
   const [pendingId, setPendingId] = React.useState<string | null>(null);
   const [error, setError] = React.useState("");
@@ -46,6 +60,33 @@ export default function AdminPublishTable({ items, apiBase, editBase, emptyLabel
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || "Could not update this item.");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Something went wrong. Please check your connection.");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const move = async (index: number, delta: number) => {
+    if (!reorderUrl) return;
+    const ids = items.map((i) => i.id);
+    const target = index + delta;
+    if (target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    setPendingId(items[index].id);
+    setError("");
+    try {
+      const res = await fetch(reorderUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Could not save the new order.");
       } else {
         router.refresh();
       }
@@ -79,16 +120,41 @@ export default function AdminPublishTable({ items, apiBase, editBase, emptyLabel
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-ink-elevated text-xs uppercase tracking-wider text-paper-muted">
             <tr>
+              {reorderUrl && <th className="px-4 py-3 font-medium">Order</th>}
               <th className="px-4 py-3 font-medium">Title</th>
               <th className="px-4 py-3 font-medium">Type</th>
               <th className="px-4 py-3 font-medium">Published</th>
-              <th className="px-4 py-3 font-medium">Featured</th>
+              {showFeatured && <th className="px-4 py-3 font-medium">Featured</th>}
               <th className="px-4 py-3 font-medium">Edit</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <tr key={item.id}>
+                {reorderUrl && (
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        disabled={pendingId !== null || index === 0}
+                        onClick={() => move(index, -1)}
+                        aria-label={`Move ${item.title} up`}
+                        className="rounded border border-white/20 px-2 py-1 text-xs text-paper-muted transition-colors hover:border-gold hover:text-paper disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pendingId !== null || index === items.length - 1}
+                        onClick={() => move(index, 1)}
+                        aria-label={`Move ${item.title} down`}
+                        className="rounded border border-white/20 px-2 py-1 text-xs text-paper-muted transition-colors hover:border-gold hover:text-paper disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </td>
+                )}
                 <td className="px-4 py-3">
                   <div className="font-medium text-paper">{item.title}</div>
                   <div className="text-xs text-paper-muted">{item.subtitle}</div>
@@ -108,6 +174,7 @@ export default function AdminPublishTable({ items, apiBase, editBase, emptyLabel
                     {item.published ? "Published" : "Draft"}
                   </button>
                 </td>
+                {showFeatured && (
                 <td className="px-4 py-3">
                   <button
                     type="button"
@@ -122,6 +189,7 @@ export default function AdminPublishTable({ items, apiBase, editBase, emptyLabel
                     {item.featured ? "Featured" : "Standard"}
                   </button>
                 </td>
+                )}
                 <td className="px-4 py-3">
                   <Link
                     href={`${editBase}/${item.id}/edit`}
@@ -129,6 +197,14 @@ export default function AdminPublishTable({ items, apiBase, editBase, emptyLabel
                   >
                     Edit
                   </Link>
+                  {previewBase && (
+                    <Link
+                      href={`${previewBase}/${item.id}/preview`}
+                      className="ml-4 text-gold underline-offset-4 hover:underline"
+                    >
+                      Preview
+                    </Link>
+                  )}
                 </td>
               </tr>
             ))}

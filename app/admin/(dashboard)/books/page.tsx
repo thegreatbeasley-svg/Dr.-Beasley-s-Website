@@ -17,8 +17,8 @@ export default async function AdminBooksPage({
   const items = books.map((b) => ({
     id: b.id,
     title: b.title,
-    subtitle: `/${b.slug} · ${getBookStatusLabel(b.status)}`,
-    badge: b.kind[0].toUpperCase() + b.kind.slice(1),
+    subtitle: `/books/${b.slug}${b.subtitle ? ` · ${b.subtitle}` : ""}`,
+    badge: getBookStatusLabel(b.status === "draft" ? "available" : b.status),
     published: b.published,
     featured: b.featured,
   }));
@@ -26,21 +26,30 @@ export default async function AdminBooksPage({
   return (
     <div>
       <DeletedBanner searchParams={searchParams} />
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-medium text-paper">Books &amp; Body of Work</h1>
+          <h1 className="text-2xl font-medium text-paper">Books</h1>
           <p className="mt-1 text-sm text-paper-muted">
-            Books, frameworks, research, and programmes. Information and CTA only — no payments yet.
+            Dr. Beasley&rsquo;s books, shown on the public Books page in the order below. Click Draft/Published to
+            change visibility, and use the arrows to reorder.
           </p>
         </div>
         <Link
           href="/admin/books/new"
-          className="rounded-full bg-tangerine px-5 py-3 text-xs font-semibold uppercase tracking-widest text-tangerine-ink transition-colors hover:bg-tangerine-hover"
+          className="shrink-0 rounded-full bg-tangerine px-5 py-3 text-xs font-semibold uppercase tracking-widest text-tangerine-ink transition-colors hover:bg-tangerine-hover"
         >
-          New entry
+          New book
         </Link>
       </div>
-      <AdminPublishTable items={items} apiBase="/api/admin/books" editBase="/admin/books" emptyLabel="No books or body-of-work entries yet." />
+      <AdminPublishTable
+        items={items}
+        apiBase="/api/admin/books"
+        editBase="/admin/books"
+        emptyLabel="No books yet."
+        reorderUrl="/api/admin/books/reorder"
+        previewBase="/admin/books"
+        showFeatured={false}
+      />
     </div>
   );
 }

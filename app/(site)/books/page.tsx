@@ -1,14 +1,16 @@
 import { listPublishedBooks } from "@/lib/books/queries";
-import { getBookCoverUrl, getBookStatusLabel } from "@/lib/books/cover";
-import ContentCard from "@/app/components/ui/ContentCard";
+import BookFeature from "@/app/components/books/BookFeature";
 import ComingSoon from "@/app/components/ui/ComingSoon";
 import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
+const INTRO =
+  "Stories, insights, and practical guidance for navigating life’s most difficult transitions—and discovering what comes next.";
+
 export const metadata = buildMetadata({
-  title: "Books & Body of Work — Dr. Virgil Beasley",
-  description: "Books, frameworks, research, and programmes from Dr. Virgil Beasley.",
+  title: "Books by Dr. Virgil Beasley",
+  description: INTRO,
   path: "/books",
 });
 
@@ -16,38 +18,45 @@ export default async function BooksPage() {
   const books = await listPublishedBooks();
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">Body of Work</p>
-        <h1 className="mt-5 text-3xl font-medium text-paper sm:text-4xl">Books &amp; body of work</h1>
-        <p className="mt-4 text-base leading-relaxed text-paper-muted">
-          Books, frameworks, research, and programmes. This section is informational for now —
-          purchasing isn&rsquo;t connected yet.
-        </p>
-      </div>
+    <>
+      <section aria-labelledby="books-heading" className="relative overflow-hidden border-b border-white/10">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[620px] -translate-x-1/2 rounded-full bg-gold/10 blur-[140px]"
+        />
+        <div className="relative mx-auto max-w-3xl px-6 py-20 text-center sm:py-28">
+          <span aria-hidden="true" className="mx-auto block h-px w-12 bg-gold" />
+          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.35em] text-gold">Books</p>
+          <h1
+            id="books-heading"
+            className="mt-6 text-balance font-display text-4xl font-medium leading-[1.12] text-paper sm:text-5xl"
+          >
+            Books by Dr. Virgil Beasley
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-pretty font-display text-lg italic leading-relaxed text-paper-muted sm:text-xl">
+            {INTRO}
+          </p>
+        </div>
+      </section>
 
       {books.length === 0 ? (
-        <ComingSoon
-          title="Books & Body of Work"
-          message="A growing collection of books, essays and enduring ideas is being prepared. Please return soon."
-          ctaHref="/knowledge"
-          ctaLabel="Visit the Knowledge Hub"
-        />
+        <div className="mx-auto max-w-6xl px-6 pb-24">
+          <ComingSoon
+            title="Books"
+            message="Dr. Beasley’s books will be listed here soon."
+            ctaHref="/knowledge"
+            ctaLabel="Visit the Knowledge Hub"
+          />
+        </div>
       ) : (
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {books.map((book) => (
-            <ContentCard
-              key={book.id}
-              href={`/books/${book.slug}`}
-              coverUrl={getBookCoverUrl(book)}
-              badge={getBookStatusLabel(book.status)}
-              title={book.title}
-              description={book.description}
-              cta="Learn more"
-            />
+        <div className="mx-auto max-w-6xl px-6">
+          {books.map((book, index) => (
+            <div key={book.id} className="border-b border-white/10 py-16 last:border-b-0 sm:py-24">
+              <BookFeature book={book} index={index} priority={index === 0} />
+            </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
