@@ -2,6 +2,7 @@ import Link from "next/link";
 import DeletedBanner from "@/app/components/admin/DeletedBanner";
 import { listAllResourcesAdmin } from "@/lib/resources/queries";
 import AdminResourcesTable from "@/app/components/admin/AdminResourcesTable";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default async function AdminResourcesPage({
 }: {
   searchParams: Promise<{ deleted?: string | string[] }>;
 }) {
+  await requireAdminPage();
   const resources = await listAllResourcesAdmin();
 
   return (

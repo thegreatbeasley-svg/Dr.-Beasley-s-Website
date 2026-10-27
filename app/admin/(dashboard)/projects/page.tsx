@@ -2,6 +2,7 @@ import Link from "next/link";
 import DeletedBanner from "@/app/components/admin/DeletedBanner";
 import { listAllProjectsAdmin } from "@/lib/projects/queries";
 import AdminPublishTable from "@/app/components/admin/AdminPublishTable";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default async function AdminProjectsPage({
 }: {
   searchParams: Promise<{ deleted?: string | string[] }>;
 }) {
+  await requireAdminPage();
   const projects = await listAllProjectsAdmin();
   const items = projects.map((p) => ({
     id: p.id,

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listAllQuestionsAdmin, getQuestionStats } from "@/lib/questions/queries";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default async function AdminQuestionsPage() {
+  await requireAdminPage();
   const [questions, stats] = await Promise.all([listAllQuestionsAdmin(), getQuestionStats()]);
 
   return (

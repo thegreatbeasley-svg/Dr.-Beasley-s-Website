@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import { getQuestionById } from "@/lib/questions/queries";
 import QuestionAnswerForm from "@/app/components/admin/QuestionAnswerForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export default async function AdminQuestionDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAdminPage();
   const { id } = await params;
   const question = await getQuestionById(id);
   if (!question) notFound();

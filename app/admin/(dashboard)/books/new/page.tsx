@@ -1,6 +1,8 @@
 import BookForm from "@/app/components/admin/BookForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
-export default function NewBookPage() {
+export default async function NewBookPage() {
+  await requireAdminPage();
   return (
     <div>
       <h1 className="text-2xl font-medium text-paper">New book / body-of-work entry</h1>

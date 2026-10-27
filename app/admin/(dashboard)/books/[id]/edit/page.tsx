@@ -2,8 +2,10 @@ import DangerZone from "@/app/components/admin/DangerZone";
 import { notFound } from "next/navigation";
 import { getBookById } from "@/lib/books/queries";
 import BookForm from "@/app/components/admin/BookForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export default async function EditBookPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   const book = await getBookById(id);
   if (!book) notFound();

@@ -1,4 +1,5 @@
 import { listLeadsAdmin, getLeadStats } from "@/lib/resources/queries";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ function formatDate(iso: string) {
 }
 
 export default async function AdminLeadsPage() {
+  await requireAdminPage();
   const [leads, stats] = await Promise.all([listLeadsAdmin(), getLeadStats()]);
 
   return (

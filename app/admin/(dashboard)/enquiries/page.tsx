@@ -1,5 +1,6 @@
 import { listEnquiriesAdmin } from "@/lib/contact/queries";
 import { ENQUIRY_TOPIC_LABELS, type EnquiryTopic } from "@/lib/contact/types";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,7 @@ function formatDate(iso: string) {
 }
 
 export default async function AdminEnquiriesPage() {
+  await requireAdminPage();
   const enquiries = await listEnquiriesAdmin();
 
   return (

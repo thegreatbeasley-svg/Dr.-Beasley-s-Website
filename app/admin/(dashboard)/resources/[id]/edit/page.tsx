@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { getResourceById } from "@/lib/resources/queries";
 import ResourceForm from "@/app/components/admin/ResourceForm";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export default async function EditResourcePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAdminPage();
   const { id } = await params;
   const resource = await getResourceById(id);
   if (!resource) notFound();

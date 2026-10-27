@@ -3,6 +3,7 @@ import DeletedBanner from "@/app/components/admin/DeletedBanner";
 import { listAllBooksAdmin } from "@/lib/books/queries";
 import { getBookStatusLabel } from "@/lib/books/cover";
 import AdminPublishTable from "@/app/components/admin/AdminPublishTable";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function AdminBooksPage({
 }: {
   searchParams: Promise<{ deleted?: string | string[] }>;
 }) {
+  await requireAdminPage();
   const books = await listAllBooksAdmin();
   const items = books.map((b) => ({
     id: b.id,

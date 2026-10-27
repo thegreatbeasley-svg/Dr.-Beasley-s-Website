@@ -1,7 +1,9 @@
 import ResourceForm from "@/app/components/admin/ResourceForm";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { requireAdminPage } from "@/lib/admin/session";
 
-export default function NewResourcePage() {
+export default async function NewResourcePage() {
+  await requireAdminPage();
   return (
     <div>
       <h1 className="text-2xl font-medium text-paper">New resource</h1>

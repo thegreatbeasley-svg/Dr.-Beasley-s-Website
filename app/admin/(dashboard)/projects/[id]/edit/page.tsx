@@ -2,8 +2,10 @@ import DangerZone from "@/app/components/admin/DangerZone";
 import { notFound } from "next/navigation";
 import { getProjectById } from "@/lib/projects/queries";
 import ProjectForm from "@/app/components/admin/ProjectForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   const project = await getProjectById(id);
   if (!project) notFound();

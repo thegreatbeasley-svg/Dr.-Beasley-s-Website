@@ -2,12 +2,14 @@ import DangerZone from "@/app/components/admin/DangerZone";
 import { notFound } from "next/navigation";
 import { getArticleById } from "@/lib/articles/queries";
 import ArticleForm from "@/app/components/admin/ArticleForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
 export default async function EditArticlePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAdminPage();
   const { id } = await params;
   const article = await getArticleById(id);
   if (!article) notFound();

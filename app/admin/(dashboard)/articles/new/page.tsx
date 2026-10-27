@@ -1,6 +1,8 @@
 import ArticleForm from "@/app/components/admin/ArticleForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
-export default function NewArticlePage() {
+export default async function NewArticlePage() {
+  await requireAdminPage();
   return (
     <div>
       <h1 className="text-2xl font-medium text-paper">New article</h1>

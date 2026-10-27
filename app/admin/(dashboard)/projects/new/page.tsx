@@ -1,6 +1,8 @@
 import ProjectForm from "@/app/components/admin/ProjectForm";
+import { requireAdminPage } from "@/lib/admin/session";
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
+  await requireAdminPage();
   return (
     <div>
       <h1 className="text-2xl font-medium text-paper">New project</h1>
